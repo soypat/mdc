@@ -14,7 +14,7 @@ type Button struct {
 	Style     ButtonStyle            `vecty:"prop"`
 	Disabled  bool                   `vecty:"prop"`
 	Listeners []*vecty.EventListener `vecty:"prop"`
-	Icon      string                 `vecty:"prop"`
+	Icon      IconType               `vecty:"prop"`
 }
 
 func (b *Button) Render() vecty.ComponentOrHTML {
@@ -34,12 +34,12 @@ func (b *Button) Render() vecty.ComponentOrHTML {
 	}
 	return elem.Button(
 		vecty.Markup(markups...),
+		vecty.If(
+			hasIcon, newButtonIcon(b.Icon),
+		),
 		elem.Span(
 			vecty.Markup(vecty.Class("mdc-button__label")),
 			b.Label,
-		),
-		vecty.If(
-			hasIcon, vecty.Tag("i"),
 		),
 	)
 }
@@ -68,8 +68,8 @@ func (t *Typography) Render() vecty.ComponentOrHTML {
 	)
 }
 
-// TopBar represents a App bar in the top position.
-type TopBar struct {
+// Navbar represents a App bar in the top position.
+type Navbar struct {
 	vecty.Core
 
 	Variant       AppBarVariant
@@ -78,7 +78,7 @@ type TopBar struct {
 	SectionEnd    vecty.List
 }
 
-func (tb *TopBar) Render() vecty.ComponentOrHTML {
+func (tb *Navbar) Render() vecty.ComponentOrHTML {
 	jlog.Trace("TopBar.Render")
 	return elem.Header(vecty.Markup(vecty.Class("mdc-top-app-bar", tb.Variant.ClassName())),
 
@@ -117,6 +117,34 @@ func (tb *TopBar) Render() vecty.ComponentOrHTML {
 
 // AdjustmentClass returns the class name for <main> element to adjust
 // view.
-func (tb *TopBar) AdjustmentClass() string {
+func (tb *Navbar) AdjustmentClass() string {
 	return tb.Variant.ClassName() + "-adjust"
+}
+
+type icon struct {
+	vecty.Core
+	kind    IconType
+	subtype string
+}
+
+func (c *icon) Render() vecty.ComponentOrHTML {
+	jlog.Trace("icon.Render")
+	classes := vecty.ClassMap{
+		"material-icons":              true,
+		"mdc-" + c.subtype + "__icon": c.subtype != "",
+	}
+	return vecty.Tag("i",
+		vecty.Markup(
+			classes,
+			vecty.Property("aria-hidden", true),
+		),
+		vecty.Text(c.kind.Name()),
+	)
+}
+
+func newButtonIcon(kind IconType) *icon {
+	return &icon{
+		subtype: "button",
+		kind:    kind,
+	}
 }

@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"
+	"github.com/hexops/vecty/event"
 	"github.com/soypat/mdc"
 	"github.com/soypat/mdc/examples/jlog"
 )
@@ -26,13 +27,25 @@ type Body struct {
 }
 
 func (b *Body) Render() vecty.ComponentOrHTML {
-	bar := &mdc.TopBar{
+	butt := &mdc.Button{
+		Label: vecty.Text("Rerender"),
+		// Icon:  mdc.IconBookmark,
+	}
+	_ = butt
+	bar := &mdc.Navbar{
 		SectionStart: vecty.List{
-			&mdc.Typography{
-				Style: mdc.Headline6,
-				Root:  vecty.Text("soypat's stuff"),
-			},
+			elem.Div(
+				butt.SetEventListeners(event.Click(func(e *vecty.Event) {
+					listener()
+				})),
+			),
 		},
+		// SectionCenter: vecty.List{
+		// 	&mdc.Typography{
+		// 		Style: mdc.Headline6,
+		// 		Root:  vecty.Text("soypat's stuff"),
+		// 	},
+		// },
 	}
 	jlog.Debugf("%+v", bar)
 	jlog.Debug(bar.SectionStart)
