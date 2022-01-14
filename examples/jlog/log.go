@@ -7,6 +7,8 @@ import (
 	"io"
 
 	"syscall/js"
+
+	"github.com/sanity-io/litter"
 )
 
 var PackageLevel = LevelNone
@@ -19,6 +21,14 @@ const (
 	LevelTrace
 )
 
+func init() {
+	litter.Config = litter.Options{
+		HidePrivateFields: false,
+		// StripPackageNames: true,
+		HomePackage: "vecty",
+	}
+}
+
 func print(a ...interface{}) {
 	fmt.Fprintln(Console, a...)
 }
@@ -27,10 +37,10 @@ func printf(format string, a ...interface{}) {
 	fmt.Fprintf(Console, format, a...)
 }
 
-// Debug print
+// Debug print with rich data
 func Debug(a ...interface{}) {
 	if PackageLevel >= LevelDebug {
-		print(a...)
+		print(litter.Sdump(a...))
 	}
 }
 

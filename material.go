@@ -52,8 +52,8 @@ func (b *Button) SetEventListeners(events ...*vecty.EventListener) *Button {
 type Typography struct {
 	vecty.Core // Do not modify.
 
-	Root  *vecty.HTML
-	Style TypographyStyle
+	Root  *vecty.HTML     `vecty:"prop"`
+	Style TypographyStyle `vecty:"prop"`
 }
 
 func (t *Typography) Render() vecty.ComponentOrHTML {
@@ -72,10 +72,10 @@ func (t *Typography) Render() vecty.ComponentOrHTML {
 type Navbar struct {
 	vecty.Core
 
-	Variant       AppBarVariant
-	SectionStart  vecty.List
-	SectionCenter vecty.List
-	SectionEnd    vecty.List
+	Variant       AppBarVariant `vecty:"prop"`
+	SectionStart  vecty.List    `vecty:"prop"`
+	SectionCenter vecty.List    `vecty:"prop"`
+	SectionEnd    vecty.List    `vecty:"prop"`
 }
 
 func (tb *Navbar) Render() vecty.ComponentOrHTML {
@@ -123,8 +123,8 @@ func (tb *Navbar) AdjustmentClass() string {
 
 type icon struct {
 	vecty.Core
-	kind    IconType
-	subtype string
+	kind    IconType `vecty:"prop"`
+	subtype string   `vecty:"prop"`
 }
 
 func (c *icon) Render() vecty.ComponentOrHTML {
