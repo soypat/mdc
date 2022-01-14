@@ -155,16 +155,6 @@ func (bv AppBarVariant) ClassName() (class string) {
 
 type IconType string
 
-// TODO(soypat) add more MDC icons.
-const (
-	IconBookmark   IconType = "bookmark"
-	IconNavigation IconType = "navigation"
-	IconMoreVert   IconType = "more_vert"
-	IconDeleteBin  IconType = "delete"
-	IconShare      IconType = "share"
-	IconClose      IconType = "close"
-)
-
 func (c IconType) Name() string {
 	return string(c)
 }

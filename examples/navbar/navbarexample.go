@@ -35,6 +35,7 @@ type Body struct {
 func (b *Body) Render() vecty.ComponentOrHTML {
 	butt := &mdc.Button{
 		Label: vecty.Text("Rerender"),
+		Icon:  mdc.IconAdminPanelSettings,
 		Listeners: []*vecty.EventListener{
 			event.Click(func(e *vecty.Event) {
 				counter++
