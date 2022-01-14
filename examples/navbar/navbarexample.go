@@ -35,17 +35,17 @@ type Body struct {
 func (b *Body) Render() vecty.ComponentOrHTML {
 	butt := &mdc.Button{
 		Label: vecty.Text("Rerender"),
+		Listeners: []*vecty.EventListener{
+			event.Click(func(e *vecty.Event) {
+				counter++
+				listener()
+			}),
+		},
 	}
 
 	bar := &mdc.Navbar{
 		SectionStart: vecty.List{
-			elem.Div(
-				vecty.Markup(event.Click(func(e *vecty.Event) {
-					counter++
-					listener()
-				})),
-				butt,
-			),
+			butt,
 		},
 		SectionCenter: vecty.List{
 			&mdc.Typography{
@@ -60,6 +60,28 @@ func (b *Body) Render() vecty.ComponentOrHTML {
 			},
 		},
 	}
+	_ = bar
+	// ex :=
 
-	return elem.Body(bar)
+	return elem.Body(
+		// vecty.Markup(vecty.UnsafeHTML(example)),
+		bar,
+	)
 }
+
+const example = `<header class="mdc-top-app-bar">
+<div class="mdc-top-app-bar__row">
+  <section class="mdc-top-app-bar__section mdc-top-app-bar__section--align-start">
+	<button class="material-icons mdc-top-app-bar__navigation-icon mdc-icon-button" aria-label="Open navigation menu">menu</button>
+	<span class="mdc-top-app-bar__title">Page title</span>
+  </section>
+  <section class="mdc-top-app-bar__section mdc-top-app-bar__section--align-end" role="toolbar">
+	<button class="material-icons mdc-top-app-bar__action-item mdc-icon-button" aria-label="Favorite">favorite</button>
+	<button class="material-icons mdc-top-app-bar__action-item mdc-icon-button" aria-label="Search">search</button>
+	<button class="material-icons mdc-top-app-bar__action-item mdc-icon-button" aria-label="Options">more_vert</button>
+  </section>
+</div>
+</header>
+<main class="mdc-top-app-bar--fixed-adjust">
+App content
+</main>`

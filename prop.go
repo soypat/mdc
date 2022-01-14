@@ -10,21 +10,47 @@ import (
 type ButtonStyle int
 
 const (
-	ButtonRaised ButtonStyle = iota
+	defaultButtonStyle ButtonStyle = iota
+	ButtonRaised
 	ButtonOutline
 	ButtonText
 )
 
 func (bs ButtonStyle) ClassName() (class string) {
 	switch bs {
-	case ButtonRaised:
+	case ButtonText:
+		class = "mdc-button"
+	case ButtonRaised, defaultButtonStyle:
 		class = "mdc-button--raised"
 	case ButtonOutline:
 		class = "mdc-button--outline"
 	default:
-		panic("unknown button variant")
+		panic("mdc: unknown button variant")
 	}
 	return class
+}
+
+type Size int
+
+const (
+	defaultSize Size = iota
+	SizeSmall
+	SizeMedium
+	SizeLarge
+)
+
+func (s Size) Name() (str string) {
+	switch s {
+	case defaultSize, SizeSmall:
+		str = "small"
+	case SizeMedium:
+		str = "medium"
+	case SizeLarge:
+		str = "large"
+	default:
+		panic("mdc: unknown Size property")
+	}
+	return str
 }
 
 type TypographyStyle int
@@ -63,7 +89,7 @@ func (ts TypographyStyle) ClassName() (class string) {
 		class += "caption"
 
 	default:
-		panic("unknown typography variant")
+		panic("mdc: unknown typography variant")
 	}
 	return class
 }
@@ -89,9 +115,13 @@ func (ts TypographyStyle) Element() (element func(markup ...vecty.MarkupOrChild)
 	case Body1, Body2, defaultTypography:
 		element = elem.Body
 	default:
-		panic("unknown typography variant")
+		panic("mdc: unknown typography variant")
 	}
 	return element
+}
+
+func (ts TypographyStyle) IsHeadline() bool {
+	return ts <= Headline6 && ts >= Headline1
 }
 
 type AppBarVariant int
@@ -118,7 +148,7 @@ func (bv AppBarVariant) ClassName() (class string) {
 	case VariantTopBarDense:
 		class += "dense"
 	default:
-		panic("unknown top bar variant")
+		panic("mdc: unknown top bar variant")
 	}
 	return class
 }
@@ -127,7 +157,12 @@ type IconType string
 
 // TODO(soypat) add more MDC icons.
 const (
-	IconBookmark IconType = "bookmark"
+	IconBookmark   IconType = "bookmark"
+	IconNavigation IconType = "navigation"
+	IconMoreVert   IconType = "more_vert"
+	IconDeleteBin  IconType = "delete"
+	IconShare      IconType = "share"
+	IconClose      IconType = "close"
 )
 
 func (c IconType) Name() string {

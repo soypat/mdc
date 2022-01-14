@@ -10,25 +10,35 @@ import (
 type Button struct {
 	vecty.Core // Do not modify.
 
-	Label     *vecty.HTML            `vecty:"prop"`
-	Style     ButtonStyle            `vecty:"prop"`
-	Disabled  bool                   `vecty:"prop"`
-	Listeners []*vecty.EventListener `vecty:"prop"`
-	Icon      IconType               `vecty:"prop"`
+	Label *vecty.HTML `vecty:"prop"`
+	// TODO(soypat) Not implemented yet.
+	// Size      Size                   `vecty:"prop"`
+	Applyer    vecty.Applyer          `vecty:"prop"` // custom applier
+	Style      ButtonStyle            `vecty:"prop"`
+	Disabled   bool                   `vecty:"prop"`
+	Listeners  []*vecty.EventListener `vecty:"prop"`
+	Icon       IconType               `vecty:"prop"`
+	ActionItem bool                   `vecty:"prop"`
 }
 
 func (b *Button) Render() vecty.ComponentOrHTML {
 	jlog.Trace("Button.Render")
 	hasIcon := b.Icon != ""
-	classes := vecty.ClassMap{
-		"mdc-button":               true,
-		b.Style.ClassName():        true,
-		"mdc-button--icon-leading": hasIcon,
-	}
 	markups := []vecty.Applyer{
 		prop.Disabled(b.Disabled),
-		classes,
 	}
+	if b.Applyer == nil {
+		// default applyer for loose buttons
+		markups = append(markups, vecty.ClassMap{
+			"mdc-button":               true,
+			b.Style.ClassName():        true,
+			"mdc-button--icon-leading": hasIcon,
+		})
+	} else {
+		// custom applyer
+		markups = append(markups, b.Applyer)
+	}
+
 	for i := range b.Listeners {
 		markups = append(markups, b.Listeners[i])
 	}
@@ -38,8 +48,12 @@ func (b *Button) Render() vecty.ComponentOrHTML {
 			hasIcon, newButtonIcon(b.Icon),
 		),
 		elem.Span(
-			vecty.Markup(vecty.Class("mdc-button__label")),
-			b.Label,
+			vecty.Markup(
+				vecty.Class("mdc-button__label"),
+				// Accesibility for screen readers.
+				vecty.MarkupIf(b.Label == nil, vecty.Property("aria-label", b.Icon.Name())),
+			),
+			vecty.If(b.Label != nil, b.Label),
 		),
 	)
 }
@@ -52,8 +66,9 @@ func (b *Button) SetEventListeners(events ...*vecty.EventListener) *Button {
 type Typography struct {
 	vecty.Core // Do not modify.
 
-	Root  *vecty.HTML     `vecty:"prop"`
-	Style TypographyStyle `vecty:"prop"`
+	Applyer vecty.Applyer   `vecty:"prop"`
+	Root    *vecty.HTML     `vecty:"prop"`
+	Style   TypographyStyle `vecty:"prop"`
 }
 
 func (t *Typography) Render() vecty.ComponentOrHTML {
@@ -63,7 +78,10 @@ func (t *Typography) Render() vecty.ComponentOrHTML {
 	}
 	element := t.Style.Element()
 	return element(
-		vecty.Markup(vecty.Class(t.Style.ClassName())),
+		vecty.Markup(
+			vecty.Class(t.Style.ClassName()),
+			vecty.MarkupIf(t.Applyer != nil, t.Applyer),
+		),
 		t.Root,
 	)
 }
@@ -80,6 +98,15 @@ type Navbar struct {
 
 func (tb *Navbar) Render() vecty.ComponentOrHTML {
 	jlog.Trace("TopBar.Render")
+	for _, e := range tb.SectionStart {
+		tb.apply(e)
+	}
+	for _, e := range tb.SectionCenter {
+		tb.apply(e)
+	}
+	for _, e := range tb.SectionEnd {
+		tb.apply(e)
+	}
 	return elem.Header(vecty.Markup(vecty.Class("mdc-top-app-bar", tb.Variant.ClassName())),
 
 		elem.Div(vecty.Markup(vecty.Class("mdc-top-app-bar__row")),
@@ -121,6 +148,34 @@ func (tb *Navbar) AdjustmentClass() string {
 	return tb.Variant.ClassName() + "-adjust"
 }
 
+func (tb *Navbar) apply(sectionItem vecty.ComponentOrHTML) {
+	switch e := sectionItem.(type) {
+	case *Button:
+		hasIcon := e.Icon != ""
+		onlyIcon := hasIcon && e.Label == nil
+		if onlyIcon {
+			e.Applyer = vecty.ClassMap{
+				"mdc-top-app-bar__" + e.Icon.Name() + "-icon": onlyIcon,
+				"material-icons":               onlyIcon,
+				"mdc-icon-button":              onlyIcon,
+				"mdc-top-app-bar__action-item": e.ActionItem,
+			}
+		} else {
+			// TODO(soypat): haven't seen what buttons should look like in
+			e.Applyer = vecty.ClassMap{
+				"mdc-button":                   true,
+				e.Style.ClassName():            true,
+				"mdc-top-app-bar__action-item": true,
+			}
+		}
+
+	case *Typography:
+		if e.Style.IsHeadline() {
+			e.Applyer = vecty.Class("mdc-top-app-bar__title")
+		}
+	}
+}
+
 type icon struct {
 	vecty.Core
 	kind    IconType `vecty:"prop"`
@@ -147,4 +202,7 @@ func newButtonIcon(kind IconType) *icon {
 		subtype: "button",
 		kind:    kind,
 	}
+}
+
+type Toolbar struct {
 }
