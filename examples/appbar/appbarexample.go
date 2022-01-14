@@ -1,6 +1,8 @@
 package main
 
 import (
+	"strconv"
+
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"
 	"github.com/hexops/vecty/event"
@@ -8,7 +10,11 @@ import (
 	"github.com/soypat/mdc/examples/jlog"
 )
 
-var listener func()
+// Global state
+var (
+	counter  = 1
+	listener func()
+)
 
 func main() {
 	mdc.SetDefaultViewport()
@@ -29,25 +35,31 @@ type Body struct {
 func (b *Body) Render() vecty.ComponentOrHTML {
 	butt := &mdc.Button{
 		Label: vecty.Text("Rerender"),
-		// Icon:  mdc.IconBookmark,
 	}
-	_ = butt
+
 	bar := &mdc.Navbar{
 		SectionStart: vecty.List{
 			elem.Div(
-				butt.SetEventListeners(event.Click(func(e *vecty.Event) {
+				vecty.Markup(event.Click(func(e *vecty.Event) {
+					counter++
 					listener()
 				})),
+				butt,
 			),
 		},
-		// SectionCenter: vecty.List{
-		// 	&mdc.Typography{
-		// 		Style: mdc.Headline6,
-		// 		Root:  vecty.Text("soypat's stuff"),
-		// 	},
-		// },
+		SectionCenter: vecty.List{
+			&mdc.Typography{
+				Root:  vecty.Text("soypat's mancave"),
+				Style: mdc.Headline6,
+			},
+		},
+		SectionEnd: vecty.List{
+			&mdc.Typography{
+				Root:  vecty.Text("you are visitor #" + strconv.Itoa(counter)),
+				Style: mdc.Headline5,
+			},
+		},
 	}
-	jlog.Debugf("%+v", bar)
-	jlog.Debug(bar.SectionStart)
+
 	return elem.Body(bar)
 }
