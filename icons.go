@@ -2,6 +2,7 @@ package mdc
 
 // Added manually
 const (
+	IconDehaze         IconType = "dehaze"
 	IconNavigation     IconType = "navigation"
 	IconMoreVertical   IconType = "more_vert"
 	IconMoreHorizontal IconType = "more_horiz"

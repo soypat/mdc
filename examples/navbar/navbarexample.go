@@ -33,9 +33,11 @@ type Body struct {
 }
 
 func (b *Body) Render() vecty.ComponentOrHTML {
+	vecty.SetTitle("Welcome visitor")
 	butt := &mdc.Button{
-		Label: vecty.Text("Rerender"),
-		Icon:  mdc.IconAdminPanelSettings,
+		// Uncomment to use text button
+		// Label: vecty.Text("Rerender"),
+		Icon: mdc.IconDehaze,
 		Listeners: []*vecty.EventListener{
 			event.Click(func(e *vecty.Event) {
 				counter++

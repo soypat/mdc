@@ -178,31 +178,56 @@ func (tb *Navbar) apply(sectionItem vecty.ComponentOrHTML) {
 
 type icon struct {
 	vecty.Core
-	kind    IconType `vecty:"prop"`
-	subtype string   `vecty:"prop"`
+	Kind    IconType `vecty:"prop"`
+	Subtype string   `vecty:"prop"`
 }
 
 func (c *icon) Render() vecty.ComponentOrHTML {
 	jlog.Trace("icon.Render")
 	classes := vecty.ClassMap{
 		"material-icons":              true,
-		"mdc-" + c.subtype + "__icon": c.subtype != "",
+		"mdc-" + c.Subtype + "__icon": c.Subtype != "",
 	}
 	return vecty.Tag("i",
 		vecty.Markup(
 			classes,
 			vecty.Property("aria-hidden", true),
 		),
-		vecty.Text(c.kind.Name()),
+		vecty.Text(c.Kind.Name()),
 	)
 }
 
 func newButtonIcon(kind IconType) *icon {
 	return &icon{
-		subtype: "button",
-		kind:    kind,
+		Subtype: "button",
+		Kind:    kind,
 	}
 }
 
-type Toolbar struct {
+// Leftbar is similar to the navbar but comes at you from a side
+// of the application.
+type Leftbar struct {
+	vecty.Core
+}
+
+func (c *Leftbar) Render() vecty.ComponentOrHTML {
+	list := &List{}
+	return vecty.Tag("aside",
+		vecty.Markup(vecty.Class("mdc-drawer")),
+		elem.Div(
+			vecty.Markup(vecty.Class("mdc-drawer__content")),
+			elem.Navigation(
+				// TODO add list
+				list,
+			),
+		),
+	)
+}
+
+type List struct {
+	vecty.Core
+}
+
+func (l *List) Render() vecty.ComponentOrHTML {
+	return elem.UnorderedList()
 }
