@@ -8,6 +8,8 @@ import (
 	"github.com/soypat/mdc/examples/jlog"
 )
 
+// Button implements the button Material Design Component
+// https://material.io/components/buttons
 type Button struct {
 	vecty.Core // Do not modify.
 
@@ -64,6 +66,8 @@ func (b *Button) SetEventListeners(events ...*vecty.EventListener) *Button {
 	return b
 }
 
+// Typography implements Material Design's Typography element
+// https://material.io/design/typography/the-type-system.html.
 type Typography struct {
 	vecty.Core // Do not modify.
 
@@ -88,6 +92,7 @@ func (t *Typography) Render() vecty.ComponentOrHTML {
 }
 
 // Navbar represents a App bar in the top position.
+// https://material.io/components/app-bars-top.
 type Navbar struct {
 	vecty.Core
 
@@ -205,8 +210,8 @@ func newButtonIcon(kind IconType) *icon {
 	}
 }
 
-// Leftbar is similar to the navbar but comes at you from a side
-// of the application.
+// Leftbar implements the navigation drawer Material Design component
+// https://material.io/components/navigation-drawer.
 type Leftbar struct {
 	vecty.Core
 
@@ -244,6 +249,8 @@ func (c *Leftbar) Render() vecty.ComponentOrHTML {
 	)
 }
 
+// List implements the list Material Design component
+// https://material.io/components/lists.
 type List struct {
 	vecty.Core
 
@@ -271,6 +278,7 @@ func (l *List) Render() vecty.ComponentOrHTML {
 	)
 }
 
+// ListItem is a component for use with the List component.
 type ListItem struct {
 	vecty.Core
 
@@ -312,6 +320,8 @@ func (l *ListItem) Render() vecty.ComponentOrHTML {
 
 var badFormID = "form inputs require unique, non empty IDs"
 
+// Checkbox implements the checkbox Material Design component
+// https://material.io/components/checkboxes.
 // Checkboxes should always rendered as indeterminate on startup.
 type Checkbox struct {
 	vecty.Core
@@ -346,6 +356,8 @@ func (cb *Checkbox) Render() vecty.ComponentOrHTML {
 	)
 }
 
+// DataTable implements the data table Material Design component
+// https://material.io/components/data-tables
 type DataTable struct {
 	vecty.Core
 	Columns []Series `vecty:"prop"`
@@ -360,10 +372,10 @@ func (dt *DataTable) Render() vecty.ComponentOrHTML {
 					vecty.Markup(vecty.Class("mdc-data-table__header-row")),
 					dt.heads()),
 				),
+				vecty.If(dt.Rows > 0, elem.TableBody(vecty.Markup(vecty.Class("mdc-data-table__content")),
+					dt.rows(),
+				)),
 			),
-			vecty.If(dt.Rows > 0, elem.TableBody(vecty.Markup(vecty.Class("mdc-data-table__content")),
-				dt.rows(),
-			)),
 		),
 	)
 }
@@ -372,16 +384,22 @@ func (dt *DataTable) heads() vecty.MarkupOrChild {
 	var heads vecty.List
 	for i := 0; i < len(dt.Columns); i++ {
 		k := dt.Columns[i].Kind()
+		cc := k.CellClassName()
+		cellClass := vecty.MarkupIf(cc != "", vecty.Class(cc))
 		switch k {
 		case DataString, DataNumeric:
 			heads = append(heads, elem.TableHeader(vecty.Markup(
 				vecty.Class("mdc-data-table__header-cell"),
 				vecty.Attribute("role", "columnheader"),
 				vecty.Attribute("scope", "col"),
-				vecty.MarkupIf(k == DataNumeric, vecty.Class(k.ClassName())),
+				cellClass,
 			),
-				vecty.Text(dt.Columns[i].Head()),
+				// TODO(soypat): Strong or similar style should be applied automatically
+				// figure out why the header is not bold automatically and remove elem.Strong().
+				elem.Strong(vecty.Text(dt.Columns[i].Head())),
 			))
+		case DataCheckbox:
+			panic("checkbox DataKind for DataTable not implemented")
 		}
 	}
 	return heads

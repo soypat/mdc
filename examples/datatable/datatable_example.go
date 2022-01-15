@@ -17,6 +17,10 @@ var (
 			Label: "Rating",
 			Data:  []string{"5/5", "7/5", "6/5"},
 		},
+		&mdc.IntSeries{
+			Label: "Average weight",
+			Data:  []int{20, 30, 10},
+		},
 	}
 	tabRows = 3
 )
@@ -35,8 +39,6 @@ func main() {
 
 type Body struct {
 	vecty.Core
-
-	disableButton bool
 }
 
 func (b *Body) Render() vecty.ComponentOrHTML {
