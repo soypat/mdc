@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/hexops/vecty"
+	"github.com/hexops/vecty/elem"
 )
 
 /* MDC boot */
@@ -35,6 +36,16 @@ func SetDefaultViewport() {
 
 func AddDefaultScripts() {
 	addScript(baseScriptURL, "mdc")
+	// TODO(soypat): Figure out why code below is throwing null property read.
+	// Preferrable to calling JSInit()
+	// scriptInit := js.Global().Get("document").Call("createElement", "script")
+	// scriptInit.Set("innerHTML", jsComponentsInitScript)
+	// scriptInit.Set("defer", true)
+	// js.Global().Get("document").Get("head").Call("appendChild", scriptInit)
+}
+
+func mdcOK() bool {
+	return !js.Global().Get("mdc").IsNull()
 }
 
 func addScript(url string, objName string) {
@@ -60,3 +71,22 @@ viewBox="0 0 24 24">
    d="M1.73,12.91 8.1,19.28 22.79,4.59"/>
 </svg>
 <div class="mdc-checkbox__mixedmark"></div>`
+
+// JSInit initializes javascript components.
+// Included as the last element to body.
+func JSInit() vecty.MarkupOrChild {
+	if !mdcOK() {
+		panic("mdc should be defined before JSInit element rendered. Have you included the script?")
+	}
+	return elem.Script(vecty.Markup(
+		vecty.Property("defer", true), // make sure it runs after page fully loaded
+		vecty.UnsafeHTML(jsComponentsInitScript),
+	))
+}
+
+// TODO: Let's not do this...
+const jsComponentsInitScript = `
+// Component Initialization.
+new mdc.slider.MDCSlider(document.querySelector('.mdc-slider'))
+new mdc.tooltip.MDCTooltip(document.querySelector('.mdc-tooltip'))
+`

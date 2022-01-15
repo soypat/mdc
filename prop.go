@@ -113,7 +113,7 @@ func (ts TypographyStyle) Element() (element func(markup ...vecty.MarkupOrChild)
 	case Subtitle1, Subtitle2:
 		element = elem.Subscript
 	case Body1, Body2, defaultTypography:
-		element = elem.Body
+		element = elem.Paragraph
 	default:
 		panic("mdc: unknown typography variant")
 	}

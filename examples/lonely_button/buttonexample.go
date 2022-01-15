@@ -29,18 +29,31 @@ type Body struct {
 }
 
 func (b *Body) Render() vecty.ComponentOrHTML {
+	tooltip := &mdc.Tooltip{
+		ID:    "tt-1",
+		Label: vecty.Text("This is the button tooltip"),
+	}
 	butt := &mdc.Button{
-		Label:    vecty.Text("Button"),
+		Label: elem.Span(
+			vecty.Markup(tooltip),
+			vecty.Text("This is button"),
+		),
 		Disabled: b.disableButton,
 	}
 	jlog.Debug("button disabled:", butt.Disabled)
 	return elem.Body(
-		butt.SetEventListeners(event.Click(func(e *vecty.Event) {
-			jlog.Debug("got a button click!")
-			b.disableButton = true
-			// Best practices in Vecty are to do top-down renders.
-			// See `todomvc` example over at https://github.com/hexops/vecty/tree/main/example
-			globalListener()
-		})),
+		tooltip,
+		elem.Main(
+			elem.Div(
+				butt.SetEventListeners(event.Click(func(e *vecty.Event) {
+					jlog.Debug("got a button click!")
+					b.disableButton = true
+					// Best practices in Vecty are to do top-down renders.
+					// See `todomvc` example over at https://github.com/hexops/vecty/tree/main/example
+					globalListener()
+				})),
+			),
+		),
+		mdc.JSInit(),
 	)
 }

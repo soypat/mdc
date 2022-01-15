@@ -28,12 +28,13 @@ var (
 func main() {
 	mdc.SetDefaultViewport()
 	mdc.AddDefaultStyles()
-	mdc.AddDefaultScripts()
 
 	body := &Body{}
 	globalListener = func() {
 		vecty.Rerender(body)
 	}
+	vecty.RenderInto("body", body)
+	mdc.AddDefaultScripts()
 	vecty.RenderBody(body)
 }
 
@@ -63,12 +64,7 @@ func (b *Body) Render() vecty.ComponentOrHTML {
 				</div>
 			  </div>`)),
 			),
-			&mdc.Slider{
-				Name:    "slider-1",
-				Min:     0,
-				Max:     100,
-				Variant: mdc.VariantSliderDiscrete,
-			},
 		),
+		mdc.JSInit(),
 	)
 }

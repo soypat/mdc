@@ -454,6 +454,7 @@ func (s *Slider) Render() vecty.ComponentOrHTML {
 	}
 	variantClass := s.Variant.ClassName()
 	return elem.Div(vecty.Markup(
+		prop.ID(s.Name),
 		vecty.ClassMap{
 			"mdc-slider": true,
 			variantClass: variantClass != "",
@@ -516,4 +517,38 @@ func (s *Slider) display() (disp vecty.MarkupOrChild) {
 		panic("SliderVariant display not implemented")
 	}
 	return disp
+}
+
+// Tooltip implements the tooltip Material Design component
+// https://material.io/components/tooltips/web#tooltips.
+//
+// From Material documentation: To ensure proper positioning of the tooltip,
+// it's important that this tooltip element is an immediate child of the <body>,
+// rather than nested underneath the anchor element or other elements.
+type Tooltip struct {
+	vecty.Core
+	ID    string      `vecty:"prop"`
+	Label *vecty.HTML `vecty:"prop"`
+}
+
+func (tt *Tooltip) Apply(h *vecty.HTML) {
+	vecty.Markup(
+		vecty.Attribute("aria-describedby", tt.ID),
+	).Apply(h)
+}
+
+func (tt *Tooltip) Render() vecty.ComponentOrHTML {
+	if !mdcOK() {
+		panic("MDC script required to use Tooltips")
+	}
+	return elem.Div(vecty.Markup(
+		prop.ID(tt.ID),
+		vecty.Class("mdc-tooltip"),
+		vecty.Attribute("role", "tooltip"),
+		vecty.Attribute("aria-hidden", true)),
+		elem.Div(
+			vecty.Markup(vecty.Class("mdc-tooltip__surface", "mdc-tooltip__surface-animation")),
+			tt.Label,
+		),
+	)
 }
