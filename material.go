@@ -3,6 +3,7 @@ package mdc
 import (
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"
+	"github.com/hexops/vecty/event"
 	"github.com/hexops/vecty/prop"
 	"github.com/soypat/mdc/examples/jlog"
 )
@@ -246,15 +247,26 @@ func (c *Leftbar) Render() vecty.ComponentOrHTML {
 type List struct {
 	vecty.Core
 
-	List     vecty.List `vecty:"prop"`
-	ListElem ListElem   `vecty:"prop"`
+	List     vecty.List                    `vecty:"prop"`
+	ListElem ListElem                      `vecty:"prop"`
+	Listener func(idx int, e *vecty.Event) `vecty:"prop"`
 }
 
 func (l *List) Render() vecty.ComponentOrHTML {
 	element := l.ListElem.Element()
+	if l.Listener != nil {
+		for i, v := range l.List {
+			i := i // escape loop variable
+			switch e := v.(type) {
+			case *ListItem:
+				e.Listeners = append(e.Listeners, event.Click(func(e *vecty.Event) {
+					l.Listener(i, e)
+				}))
+			}
+		}
+	}
 
 	return element(vecty.Markup(vecty.Class("mdc-list")),
-
 		l.List,
 	)
 }
@@ -262,19 +274,25 @@ func (l *List) Render() vecty.ComponentOrHTML {
 type ListItem struct {
 	vecty.Core
 
-	Label        *vecty.HTML  `vecty:"prop"`
-	Icon         IconType     `vecty:"prop"`
-	ListItemElem ListItemElem `vecty:"prop"`
-	Active       bool         `vecty:"prop"`
+	Label        *vecty.HTML            `vecty:"prop"`
+	Icon         IconType               `vecty:"prop"`
+	ListItemElem ListItemElem           `vecty:"prop"`
+	Active       bool                   `vecty:"prop"`
+	Listeners    []*vecty.EventListener `vecty:"prop"`
 }
 
 func (l *ListItem) Render() vecty.ComponentOrHTML {
 	hasIcon := l.Icon.IsValid()
 	element := l.ListItemElem.Element()
+	listeners := make([]vecty.Applyer, len(l.Listeners))
+	for i := range l.Listeners {
+		listeners[i] = l.Listeners[i]
+	}
 	return element(
 		vecty.Markup(
 			vecty.Class("mdc-list-item"),
 			vecty.MarkupIf(l.Active, vecty.Class("mdc-list-item--activated")),
+			vecty.MarkupIf(len(listeners) > 0, listeners...),
 		),
 
 		vecty.If(hasIcon,
@@ -282,6 +300,7 @@ func (l *ListItem) Render() vecty.ComponentOrHTML {
 				vecty.Text(l.Icon.Name()),
 			),
 		),
+
 		vecty.If(l.Label != nil,
 			elem.Span(
 				vecty.Markup(vecty.Class("mdc-list-item__text")),

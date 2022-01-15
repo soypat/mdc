@@ -7,7 +7,19 @@ import (
 	"github.com/soypat/mdc"
 )
 
-var listener func()
+// Global state.
+var (
+	globalListener func()
+	content        = []struct {
+		title   string
+		icon    mdc.IconType
+		content string
+	}{
+		{title: "On Sale!", icon: mdc.IconSavings, content: "Sorry, no items currently on sale"},
+		{title: "Aisle", icon: mdc.IconAddShoppingCart, content: "Stock depleted!"},
+		{title: "Checkout", icon: mdc.IconShoppingCartCheckout, content: "You have no items in your cart"},
+	}
+)
 
 func main() {
 	mdc.SetDefaultViewport()
@@ -15,7 +27,7 @@ func main() {
 	mdc.AddDefaultScripts()
 
 	body := &Body{}
-	listener = func() {
+	globalListener = func() {
 		vecty.Rerender(body)
 	}
 	vecty.RenderBody(body)
@@ -24,39 +36,42 @@ func main() {
 type Body struct {
 	vecty.Core
 
-	barOpen bool
+	barOpen  bool
+	selected int
 }
 
 func (b *Body) Render() vecty.ComponentOrHTML {
+	var items vecty.List
+	for _, page := range content {
+		items = append(items, &mdc.ListItem{
+			Label: vecty.Text(page.title),
+			Icon:  page.icon,
+		})
+	}
+
+	selectedItem := items[b.selected].(*mdc.ListItem)
+	selectedItem.Active = true
+
 	lb := &mdc.Leftbar{
 		Dismissible: true,
 		Closed:      !b.barOpen,
 		Title:       vecty.Text("Welcome user"),
 		Subtitle:    vecty.Text("NewAge Groceries welcomes you"),
 		List: &mdc.List{
-			List: vecty.List{
-				&mdc.ListItem{
-					Label: vecty.Text("On Sale!"),
-					Icon:  mdc.IconSavings,
-				},
-				&mdc.ListItem{
-					Label:  vecty.Text("Aisle"),
-					Icon:   mdc.IconAddShoppingCart,
-					Active: true,
-				},
-				&mdc.ListItem{
-					Label: vecty.Text("Checkout"),
-					Icon:  mdc.IconShoppingCartCheckout,
-				},
+			Listener: func(idx int, e *vecty.Event) {
+				b.selected = idx
+				globalListener()
 			},
+			List: items,
 		},
 	}
+
 	// TODO(soypat): Add material animation
 	// From material.io, the js looks like this:
 	//
 	// import {MDCTopAppBar} from "@material/top-app-bar";
 	// const topAppBar = MDCTopAppBar.attachTo(document.getElementById('app-bar'));
-	// topAppBar.setScrollTarget(document.getElementById('main-content'));
+	// topAppBar.setScrollTarget(documen ,t.getElementById('main-content'));
 	// topAppBar.listen('MDCTopAppBar:nav', () => {
 	// drawer.open = !drawer.open;
 	// });
@@ -64,7 +79,7 @@ func (b *Body) Render() vecty.ComponentOrHTML {
 		Icon: mdc.IconDehaze,
 		Listeners: []*vecty.EventListener{event.Click(func(e *vecty.Event) {
 			b.barOpen = !b.barOpen
-			listener()
+			globalListener()
 		})},
 	}
 	return elem.Body(
@@ -72,6 +87,9 @@ func (b *Body) Render() vecty.ComponentOrHTML {
 		elem.Div(vecty.Markup(vecty.Class("main-content", "mdc-drawer-app-content")),
 			elem.Main(
 				but,
+				&mdc.Typography{
+					Root: vecty.Text(content[b.selected].content),
+				},
 			),
 		),
 	)
