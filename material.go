@@ -23,7 +23,7 @@ type Button struct {
 
 func (b *Button) Render() vecty.ComponentOrHTML {
 	jlog.Trace("Button.Render")
-	hasIcon := b.Icon != ""
+	hasIcon := b.Icon.IsValid()
 	markups := []vecty.Applyer{
 		prop.Disabled(b.Disabled),
 	}
@@ -151,7 +151,7 @@ func (tb *Navbar) AdjustmentClass() string {
 func (tb *Navbar) apply(sectionItem vecty.ComponentOrHTML) {
 	switch e := sectionItem.(type) {
 	case *Button:
-		hasIcon := e.Icon != ""
+		hasIcon := e.Icon.IsValid()
 		onlyIcon := hasIcon && e.Label == nil
 		if onlyIcon {
 			e.Applyer = vecty.ClassMap{
@@ -208,26 +208,85 @@ func newButtonIcon(kind IconType) *icon {
 // of the application.
 type Leftbar struct {
 	vecty.Core
+
+	Title       *vecty.HTML `vecty:"prop"`
+	Subtitle    *vecty.HTML `vecty:"prop"`
+	List        *List       `vecty:"prop"`
+	Dismissible bool        `vecty:"prop"`
+	Closed      bool        `vecty:"prop"`
 }
 
 func (c *Leftbar) Render() vecty.ComponentOrHTML {
-	list := &List{}
+	c.List.ListElem = ElementNavigation
+	hasHeader := c.Title != nil || c.Subtitle != nil
 	return vecty.Tag("aside",
-		vecty.Markup(vecty.Class("mdc-drawer")),
+		vecty.Markup(
+			vecty.Class("mdc-drawer"),
+			vecty.MarkupIf(c.Dismissible, vecty.Class("mdc-drawer--dismissible")),
+			vecty.MarkupIf(!c.Closed, vecty.Class("mdc-drawer--open")),
+		),
 		elem.Div(
 			vecty.Markup(vecty.Class("mdc-drawer__content")),
-			elem.Navigation(
-				// TODO add list
-				list,
+			vecty.If(hasHeader,
+				elem.Div(
+					vecty.Markup(vecty.Class("mdc-drawer__header")),
+					vecty.If(c.Title != nil, elem.Heading3(vecty.Markup(vecty.Class("mdc-drawer__title")),
+						c.Title,
+					)),
+					vecty.If(c.Subtitle != nil, elem.Heading3(vecty.Markup(vecty.Class("mdc-drawer__subtitle")),
+						c.Subtitle,
+					)),
+				),
 			),
+			c.List,
 		),
 	)
 }
 
 type List struct {
 	vecty.Core
+
+	List     vecty.List `vecty:"prop"`
+	ListElem ListElem   `vecty:"prop"`
 }
 
 func (l *List) Render() vecty.ComponentOrHTML {
-	return elem.UnorderedList()
+	element := l.ListElem.Element()
+
+	return element(vecty.Markup(vecty.Class("mdc-list")),
+
+		l.List,
+	)
+}
+
+type ListItem struct {
+	vecty.Core
+
+	Label        *vecty.HTML  `vecty:"prop"`
+	Icon         IconType     `vecty:"prop"`
+	ListItemElem ListItemElem `vecty:"prop"`
+	Active       bool         `vecty:"prop"`
+}
+
+func (l *ListItem) Render() vecty.ComponentOrHTML {
+	hasIcon := l.Icon.IsValid()
+	element := l.ListItemElem.Element()
+	return element(
+		vecty.Markup(
+			vecty.Class("mdc-list-item"),
+			vecty.MarkupIf(l.Active, vecty.Class("mdc-list-item--activated")),
+		),
+
+		vecty.If(hasIcon,
+			vecty.Tag("i", vecty.Markup(vecty.Class("material-icons", "mdc-list-item__graphic")),
+				vecty.Text(l.Icon.Name()),
+			),
+		),
+		vecty.If(l.Label != nil,
+			elem.Span(
+				vecty.Markup(vecty.Class("mdc-list-item__text")),
+				l.Label,
+			),
+		),
+	)
 }

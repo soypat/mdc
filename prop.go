@@ -158,3 +158,48 @@ type IconType string
 func (c IconType) Name() string {
 	return string(c)
 }
+
+func (c IconType) IsValid() bool { return c != "" }
+
+type ListElem int
+
+const (
+	defaultList ListElem = iota
+	ElementUnorderedList
+	ElementOrderedList
+	ElementNavigation
+)
+
+func (le ListElem) Element() (element func(markup ...vecty.MarkupOrChild) *vecty.HTML) {
+	switch le {
+	case ElementUnorderedList, defaultList:
+		element = elem.UnorderedList
+	case ElementNavigation:
+		element = elem.Navigation
+	case ElementOrderedList:
+		element = elem.OrderedList
+	default:
+		panic("unknown ListElem")
+	}
+	return element
+}
+
+type ListItemElem int
+
+const (
+	defaultListItem ListItemElem = iota
+	ElementSpanListItem
+	ElementAnchorListItem
+)
+
+func (le ListItemElem) Element() (element func(markup ...vecty.MarkupOrChild) *vecty.HTML) {
+	switch le {
+	case ElementSpanListItem, defaultListItem:
+		element = elem.Span
+	case ElementAnchorListItem:
+		element = elem.Anchor
+	default:
+		panic("unknown ListItemElem")
+	}
+	return element
+}

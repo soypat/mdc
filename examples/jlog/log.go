@@ -30,7 +30,8 @@ func init() {
 }
 
 func print(a ...interface{}) {
-	fmt.Fprintln(Console, a...)
+	str := litter.Sdump(a...)
+	fmt.Fprintln(Console, str)
 }
 
 func printf(format string, a ...interface{}) {
@@ -40,7 +41,7 @@ func printf(format string, a ...interface{}) {
 // Debug print with rich data
 func Debug(a ...interface{}) {
 	if PackageLevel >= LevelDebug {
-		print(litter.Sdump(a...))
+		print(a...)
 	}
 }
 

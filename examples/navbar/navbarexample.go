@@ -63,8 +63,6 @@ func (b *Body) Render() vecty.ComponentOrHTML {
 			},
 		},
 	}
-	_ = bar
-	// ex :=
 
 	return elem.Body(
 		// vecty.Markup(vecty.UnsafeHTML(example)),
