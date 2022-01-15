@@ -1,6 +1,8 @@
 package mdc
 
 import (
+	"strconv"
+
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"
 	"github.com/hexops/vecty/event"
@@ -318,7 +320,7 @@ func (l *ListItem) Render() vecty.ComponentOrHTML {
 	)
 }
 
-var badFormID = "form inputs require unique, non empty IDs"
+var badFormID = "form inputs require unique, non empty IDs or names"
 
 // Checkbox implements the checkbox Material Design component
 // https://material.io/components/checkboxes.
@@ -426,4 +428,94 @@ func (dt *DataTable) rows() vecty.MarkupOrChild {
 		))
 	}
 	return rows
+}
+
+// Slider implements the slider Material Design component
+// https://material.io/components/sliders/web#sliders.
+// TODO(soypat): What is going on with this component?
+// The examples in the online documentation do not yield a working slider?
+type Slider struct {
+	vecty.Core
+	Name    string        `vecty:"prop"`
+	Min     int           `vecty:"prop"`
+	Max     int           `vecty:"prop"`
+	Value   int           `vecty:"prop"`
+	Step    int           `vecty:"prop"`
+	Variant SliderVariant `vecty:"prop"`
+}
+
+func (s *Slider) Render() vecty.ComponentOrHTML {
+	if s.Name == "" {
+		panic(badFormID)
+	}
+	if s.Value < s.Min || s.Value > s.Max {
+		s.Value = (s.Min + s.Max) / 2 // Sane default: start at midpoint.
+	}
+	if s.Variant == VariantSliderDiscrete && s.Step == 0 {
+		s.Step = (s.Max - s.Min) / 20 // 20 step increments for discrete sliders.
+	}
+	variantClass := s.Variant.ClassName()
+	return elem.Div(vecty.Markup(
+		vecty.ClassMap{
+			"mdc-slider": true,
+			variantClass: variantClass != "",
+		},
+	),
+		s.inputs(),
+		s.display(),
+	)
+}
+
+func (s *Slider) inputs() (inputs vecty.MarkupOrChild) {
+	defaultMarkup := []vecty.Applyer{
+		vecty.Class("mdc-slider__input"),
+		vecty.Property("min", s.Min),
+		vecty.Property("max", s.Max),
+		vecty.Property("value", s.Value),
+		prop.Type(prop.TypeRange),
+		prop.Name(s.Name),
+		vecty.MarkupIf(s.Step > 0, vecty.Property("step", s.Step)),
+	}
+	switch s.Variant {
+	case VariantSliderContinuous, VariantSliderDiscrete, VariantSliderRange:
+		// Single input
+		inputs = elem.Input(
+			vecty.Markup(defaultMarkup...),
+		)
+	default:
+		panic("SliderVariant inputs not implemented")
+	}
+	return inputs
+}
+
+func (s *Slider) display() (disp vecty.MarkupOrChild) {
+	switch s.Variant {
+	case VariantSliderContinuous, VariantSliderDiscrete:
+		// Single input
+		disp = vecty.List{
+			elem.Div(vecty.Markup(vecty.Class("mdc-slider__track")),
+				elem.Div(vecty.Markup(vecty.Class("mdc-slider__track--inactive"))),
+				elem.Div(vecty.Markup(vecty.Class("mdc-slider__track--active")),
+					elem.Div(vecty.Markup(vecty.Class("mdc-slider__track--active_fill"))),
+				),
+			),
+			//Thumb slide element
+			elem.Div(vecty.Markup(vecty.Class("mdc-slider__thumb")),
+				vecty.If(s.Variant == VariantSliderDiscrete,
+					// Discrete Slider display bar.
+					elem.Div(vecty.Markup(vecty.Class("mdc-slider__value-indicator-container"), vecty.Attribute("aria-hidden", true)),
+						elem.Div(vecty.Markup(vecty.Class("mdc-slider__value-indicator")),
+							elem.Span(vecty.Markup(vecty.Class("mdc-slider__value-indicator-text")),
+								vecty.Text(strconv.Itoa(s.Value)),
+							),
+						),
+					),
+				),
+				elem.Div(vecty.Markup(vecty.Class("mdc-slider__thumb-knob"))),
+			),
+		}
+	default:
+		panic("SliderVariant display not implemented")
+	}
+	return disp
 }

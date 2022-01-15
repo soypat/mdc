@@ -47,6 +47,14 @@ func (b *Body) Render() vecty.ComponentOrHTML {
 		Rows:    tabRows,
 	}
 	return elem.Body(
-		dt,
+		elem.Main(
+			dt,
+			&mdc.Slider{
+				Name:    "slider-1",
+				Min:     0,
+				Max:     100,
+				Variant: mdc.VariantSliderDiscrete,
+			},
+		),
 	)
 }

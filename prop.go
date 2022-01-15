@@ -209,3 +209,27 @@ func (le ListItemElem) Element() (element func(markup ...vecty.MarkupOrChild) *v
 	}
 	return element
 }
+
+type SliderVariant int
+
+const (
+	defaultSliderVariant SliderVariant = iota
+	VariantSliderContinuous
+	// Also continuous.
+	VariantSliderRange
+	VariantSliderDiscrete
+)
+
+func (sv SliderVariant) ClassName() (class string) {
+	switch sv {
+	case VariantSliderContinuous, defaultSliderVariant:
+		// no specific class
+	case VariantSliderRange:
+		class = "mdc-slider--range"
+	case VariantSliderDiscrete:
+		class = "mdc-slider--discrete"
+	default:
+		panic("unknown SliderVariant")
+	}
+	return class
+}
