@@ -9,11 +9,13 @@ import (
 
 /* MDC boot */
 
+// See https://material.io/develop/web/getting-started
 const (
-	_MDC_VERSION                    = "4.0.0"
+	_MDC_VERSION                    = "13.0.0" // use `latest` to always acquire latest css.
 	baseStylesheetURL               = "https://unpkg.com/material-components-web@" + _MDC_VERSION + "/dist/material-components-web.min.css"
+	baseScriptURL                   = "https://unpkg.com/material-components-web@" + _MDC_VERSION + "/dist/material-components-web.min.js"
 	robotoMonoStylesheetURL         = "https://fonts.googleapis.com/css?family=Roboto+Mono"
-	robotoMonoWeightedStylesheetURL = "https://fonts.googleapis.com/css?family=Roboto+Mono"
+	robotoMonoWeightedStylesheetURL = "https://fonts.googleapis.com/css?family=Roboto:300,400,500,700"
 	iconsURL                        = "https://fonts.googleapis.com/icon?family=Material+Icons"
 )
 
@@ -32,8 +34,7 @@ func SetDefaultViewport() {
 }
 
 func AddDefaultScripts() {
-	addScript("https://unpkg.com/material-components-web@"+_MDC_VERSION+
-		"/dist/material-components-web.min.js", "mdc")
+	addScript(baseScriptURL, "mdc")
 }
 
 func addScript(url string, objName string) {

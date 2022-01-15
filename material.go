@@ -396,9 +396,7 @@ func (dt *DataTable) heads() vecty.MarkupOrChild {
 				vecty.Attribute("scope", "col"),
 				cellClass,
 			),
-				// TODO(soypat): Strong or similar style should be applied automatically
-				// figure out why the header is not bold automatically and remove elem.Strong().
-				elem.Strong(vecty.Text(dt.Columns[i].Head())),
+				vecty.Text(dt.Columns[i].Head()),
 			))
 		case DataCheckbox:
 			panic("checkbox DataKind for DataTable not implemented")
