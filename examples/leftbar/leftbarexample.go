@@ -58,7 +58,7 @@ func (b *Body) Render() vecty.ComponentOrHTML {
 		Title:       vecty.Text("Welcome user"),
 		Subtitle:    vecty.Text("NewAge Groceries welcomes you"),
 		List: &mdc.List{
-			Listener: func(idx int, e *vecty.Event) {
+			ClickListener: func(idx int, e *vecty.Event) {
 				b.selected = idx
 				globalListener()
 			},
@@ -89,6 +89,10 @@ func (b *Body) Render() vecty.ComponentOrHTML {
 				but,
 				&mdc.Typography{
 					Root: vecty.Text(content[b.selected].content),
+				},
+				&mdc.Checkbox{
+					ID:    "checkbox-1",
+					Label: vecty.Text("I acknowledge this fact."),
 				},
 			),
 		),

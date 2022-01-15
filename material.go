@@ -247,20 +247,20 @@ func (c *Leftbar) Render() vecty.ComponentOrHTML {
 type List struct {
 	vecty.Core
 
-	List     vecty.List                    `vecty:"prop"`
-	ListElem ListElem                      `vecty:"prop"`
-	Listener func(idx int, e *vecty.Event) `vecty:"prop"`
+	List          vecty.List                    `vecty:"prop"`
+	ListElem      ListElem                      `vecty:"prop"`
+	ClickListener func(idx int, e *vecty.Event) `vecty:"prop"`
 }
 
 func (l *List) Render() vecty.ComponentOrHTML {
 	element := l.ListElem.Element()
-	if l.Listener != nil {
+	if l.ClickListener != nil {
 		for i, v := range l.List {
 			i := i // escape loop variable
 			switch e := v.(type) {
 			case *ListItem:
 				e.Listeners = append(e.Listeners, event.Click(func(e *vecty.Event) {
-					l.Listener(i, e)
+					l.ClickListener(i, e)
 				}))
 			}
 		}
@@ -308,4 +308,104 @@ func (l *ListItem) Render() vecty.ComponentOrHTML {
 			),
 		),
 	)
+}
+
+var badFormID = "form inputs require unique, non empty IDs"
+
+// Checkboxes should always rendered as indeterminate on startup.
+type Checkbox struct {
+	vecty.Core
+	ID       string      `vecty:"prop"`
+	Label    *vecty.HTML `vecty:"prop"`
+	Disabled bool        `vecty:"prop"`
+	NoRipple bool        `vecty:"prop"`
+}
+
+func (cb *Checkbox) Render() vecty.ComponentOrHTML {
+	if cb.ID == "" {
+		panic(badFormID)
+	}
+	return elem.Div(vecty.Markup(vecty.Class("mdc-form-field")),
+		elem.Div(vecty.Markup(
+			vecty.Class("mdc-checkbox"),
+			vecty.MarkupIf(cb.Disabled, vecty.Class("mdc-checkbox--disabled")),
+		),
+			elem.Input(vecty.Markup(
+				prop.Type(prop.TypeCheckbox),
+				prop.ID(cb.ID),
+				vecty.Class("mdc-checkbox__native-control"),
+				// TODO(soypat): How to implement data determination.
+				vecty.MarkupIf(false, vecty.Attribute("data-indeterminate", "true")),
+			)),
+			elem.Div(
+				vecty.Markup(vecty.Class("mdc-checkbox__background"), vecty.UnsafeHTML(svgCheckbox)),
+			),
+			elem.Div(vecty.Markup(vecty.MarkupIf(!cb.NoRipple), vecty.Class("mdc-checkbox__ripple"))),
+		),
+		elem.Label(vecty.Markup(prop.For(cb.ID)), cb.Label),
+	)
+}
+
+type DataTable struct {
+	vecty.Core
+	Columns []Series `vecty:"prop"`
+	Rows    int      `vecty:"prop"`
+}
+
+func (dt *DataTable) Render() vecty.ComponentOrHTML {
+	return elem.Div(vecty.Markup(vecty.Class("mdc-data-table")),
+		elem.Div(vecty.Markup(vecty.Class("mdc-data-table__table-container")),
+			elem.Table(vecty.Markup(vecty.Class("mdc-data-table__table")),
+				elem.TableHead(elem.TableRow(
+					vecty.Markup(vecty.Class("mdc-data-table__header-row")),
+					dt.heads()),
+				),
+			),
+			vecty.If(dt.Rows > 0, elem.TableBody(vecty.Markup(vecty.Class("mdc-data-table__content")),
+				dt.rows(),
+			)),
+		),
+	)
+}
+
+func (dt *DataTable) heads() vecty.MarkupOrChild {
+	var heads vecty.List
+	for i := 0; i < len(dt.Columns); i++ {
+		k := dt.Columns[i].Kind()
+		switch k {
+		case DataString, DataNumeric:
+			heads = append(heads, elem.TableHeader(vecty.Markup(
+				vecty.Class("mdc-data-table__header-cell"),
+				vecty.Attribute("role", "columnheader"),
+				vecty.Attribute("scope", "col"),
+				vecty.MarkupIf(k == DataNumeric, vecty.Class(k.ClassName())),
+			),
+				vecty.Text(dt.Columns[i].Head()),
+			))
+		}
+	}
+	return heads
+}
+
+func (dt *DataTable) rows() vecty.MarkupOrChild {
+	rows := make(vecty.List, dt.Rows)
+	thMarkup := []vecty.Applyer{vecty.Class("mdc-data-table__cell"), vecty.Attribute("scope", "row")}
+	tdMarkup := []vecty.Applyer{vecty.Class("mdc-data-table__cell")}
+	for i := 0; i < dt.Rows; i++ {
+		row := make(vecty.List, len(dt.Columns))
+		for j := range dt.Columns {
+			markup := tdMarkup
+			if j == 0 { // append as header
+				markup = thMarkup
+			}
+			row = append(row, elem.TableHeader(
+				vecty.Markup(markup...),
+				dt.Columns[j].AtRow(i),
+			))
+		}
+		rows = append(rows, elem.TableRow(vecty.Markup(vecty.Class("mdc-data-table__row")),
+			row,
+		))
+	}
+	return rows
 }

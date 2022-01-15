@@ -8,7 +8,7 @@ import (
 	"github.com/soypat/mdc/examples/jlog"
 )
 
-var listener func()
+var globalListener func()
 
 func main() {
 	mdc.SetDefaultViewport()
@@ -16,7 +16,7 @@ func main() {
 	mdc.AddDefaultScripts()
 
 	body := &Body{}
-	listener = func() {
+	globalListener = func() {
 		vecty.Rerender(body)
 	}
 	vecty.RenderBody(body)
@@ -40,7 +40,7 @@ func (b *Body) Render() vecty.ComponentOrHTML {
 			b.disableButton = true
 			// Best practices in Vecty are to do top-down renders.
 			// See `todomvc` example over at https://github.com/hexops/vecty/tree/main/example
-			listener()
+			globalListener()
 		})),
 	)
 }
