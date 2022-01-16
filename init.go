@@ -90,3 +90,11 @@ const jsComponentsInitScript = `
 new mdc.slider.MDCSlider(document.querySelector('.mdc-slider'))
 new mdc.tooltip.MDCTooltip(document.querySelector('.mdc-tooltip'))
 `
+
+// type staticElem struct {
+// 	rendered bool
+// }
+
+// func (s *staticElem) SkipRender(prev vecty.Component) bool {
+// 	return s.rendered
+// }

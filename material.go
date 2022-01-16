@@ -8,6 +8,7 @@ import (
 	"github.com/hexops/vecty/event"
 	"github.com/hexops/vecty/prop"
 	"github.com/soypat/mdc/examples/jlog"
+	"github.com/soypat/mdc/icons"
 )
 
 // Button implements the button Material Design Component
@@ -22,7 +23,7 @@ type Button struct {
 	Style      ButtonStyle            `vecty:"prop"`
 	Disabled   bool                   `vecty:"prop"`
 	Listeners  []*vecty.EventListener `vecty:"prop"`
-	Icon       IconType               `vecty:"prop"`
+	Icon       icons.Icon             `vecty:"prop"`
 	ActionItem bool                   `vecty:"prop"`
 }
 
@@ -186,8 +187,8 @@ func (tb *Navbar) apply(sectionItem vecty.ComponentOrHTML) {
 
 type icon struct {
 	vecty.Core
-	Kind    IconType `vecty:"prop"`
-	Subtype string   `vecty:"prop"`
+	Kind    icons.Icon `vecty:"prop"`
+	Subtype string     `vecty:"prop"`
 }
 
 func (c *icon) Render() vecty.ComponentOrHTML {
@@ -205,7 +206,7 @@ func (c *icon) Render() vecty.ComponentOrHTML {
 	)
 }
 
-func newButtonIcon(kind IconType) *icon {
+func newButtonIcon(kind icons.Icon) *icon {
 	return &icon{
 		Subtype: "button",
 		Kind:    kind,
@@ -285,7 +286,7 @@ type ListItem struct {
 	vecty.Core
 
 	Label        *vecty.HTML            `vecty:"prop"`
-	Icon         IconType               `vecty:"prop"`
+	Icon         icons.Icon             `vecty:"prop"`
 	ListItemElem ListItemElem           `vecty:"prop"`
 	Active       bool                   `vecty:"prop"`
 	Listeners    []*vecty.EventListener `vecty:"prop"`

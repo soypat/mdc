@@ -8,6 +8,7 @@ import (
 	"github.com/hexops/vecty/event"
 	"github.com/soypat/mdc"
 	"github.com/soypat/mdc/examples/jlog"
+	"github.com/soypat/mdc/icons"
 )
 
 // Global state
@@ -37,7 +38,7 @@ func (b *Body) Render() vecty.ComponentOrHTML {
 	butt := &mdc.Button{
 		// Uncomment to use text button
 		// Label: vecty.Text("Rerender"),
-		Icon: mdc.IconDehaze,
+		Icon: icons.Dehaze,
 		Listeners: []*vecty.EventListener{
 			event.Click(func(e *vecty.Event) {
 				counter++

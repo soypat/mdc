@@ -153,20 +153,6 @@ func (bv AppBarVariant) ClassName() (class string) {
 	return class
 }
 
-// IconType provides Material Design components with
-// a graphical representation of button action
-// https://material.io/design/iconography/system-icons.html.
-//
-// It is most notably used on buttons and navigation action items.
-// Download/info at https://fonts.google.com/icons.
-type IconType string
-
-func (c IconType) Name() string {
-	return string(c)
-}
-
-func (c IconType) IsValid() bool { return c != "" }
-
 type ListElem int
 
 const (

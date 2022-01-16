@@ -5,6 +5,7 @@ import (
 	"github.com/hexops/vecty/elem"
 	"github.com/hexops/vecty/event"
 	"github.com/soypat/mdc"
+	"github.com/soypat/mdc/icons"
 )
 
 // Global state.
@@ -12,12 +13,12 @@ var (
 	globalListener func()
 	content        = []struct {
 		title   string
-		icon    mdc.IconType
+		icon    icons.Icon
 		content string
 	}{
-		{title: "On Sale!", icon: mdc.IconSavings, content: "Sorry, no items currently on sale"},
-		{title: "Aisle", icon: mdc.IconAddShoppingCart, content: "Stock depleted!"},
-		{title: "Checkout", icon: mdc.IconShoppingCartCheckout, content: "You have no items in your cart"},
+		{title: "On Sale!", icon: icons.Savings, content: "Sorry, no items currently on sale"},
+		{title: "Aisle", icon: icons.AddShoppingCart, content: "Stock depleted!"},
+		{title: "Checkout", icon: icons.ShoppingCartCheckout, content: "You have no items in your cart"},
 	}
 )
 
@@ -76,7 +77,7 @@ func (b *Body) Render() vecty.ComponentOrHTML {
 	// drawer.open = !drawer.open;
 	// });
 	but := &mdc.Button{
-		Icon: mdc.IconDehaze,
+		Icon: icons.Dehaze,
 		Listeners: []*vecty.EventListener{event.Click(func(e *vecty.Event) {
 			b.barOpen = !b.barOpen
 			globalListener()
