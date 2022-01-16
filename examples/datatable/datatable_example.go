@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"
+	"github.com/hexops/vecty/event"
 	"github.com/soypat/mdc"
 )
 
@@ -33,13 +34,13 @@ func main() {
 	globalListener = func() {
 		vecty.Rerender(body)
 	}
-	vecty.RenderInto("body", body)
-
 	vecty.RenderBody(body)
 }
 
 type Body struct {
 	vecty.Core
+
+	hideSlider bool
 }
 
 func (b *Body) Render() vecty.ComponentOrHTML {
@@ -50,27 +51,23 @@ func (b *Body) Render() vecty.ComponentOrHTML {
 	return elem.Body(
 		elem.Main(
 			dt,
-			elem.Form(
-				&mdc.Slider{
-					Name:    "slider-1",
-					Max:     100,
-					Variant: mdc.VariantSliderDiscrete,
+			elem.Div(
+				&mdc.Button{
+					Label: vecty.Text("Toggle Slider"),
+					Listeners: []*vecty.EventListener{event.Click(func(e *vecty.Event) {
+						b.hideSlider = !b.hideSlider
+						globalListener()
+					})},
 				},
-			// 	vecty.Markup(vecty.UnsafeHTML(sliderHTML)),
+				vecty.If(b.hideSlider, vecty.Text("slider hidden")),
+				vecty.If(!b.hideSlider,
+					&mdc.Slider{
+						Name:    "slider-1",
+						Max:     100,
+						Variant: mdc.VariantSliderDiscrete,
+					},
+				),
 			),
 		),
 	)
 }
-
-const sliderHTML = `<div class="mdc-slider">
- 	<input class="mdc-slider__input" type="range" min="0" max="100" value="50" name="volume" aria-label="Continuous slider demo">
- 	<div class="mdc-slider__track">
- 	  <div class="mdc-slider__track--inactive"></div>
- 	  <div class="mdc-slider__track--active">
- 		<div class="mdc-slider__track--active_fill"></div>
- 	  </div>
- 	</div>
- 	<div class="mdc-slider__thumb">
- 	  <div class="mdc-slider__thumb-knob"></div>
- 	</div>
-   </div>`

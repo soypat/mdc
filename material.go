@@ -2,6 +2,7 @@ package mdc
 
 import (
 	"strconv"
+	"syscall/js"
 
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"
@@ -13,6 +14,9 @@ import (
 
 // Button implements the button Material Design Component
 // https://material.io/components/buttons
+//
+// Take care when adding buttons in <form> elements as they
+// may act as Submit actions if not avoided correctly.
 type Button struct {
 	vecty.Core // Do not modify.
 
@@ -435,26 +439,34 @@ func (dt *DataTable) rows() vecty.MarkupOrChild {
 // The examples in the online documentation do not yield a working slider?
 type Slider struct {
 	vecty.Core
-	Name     string        `vecty:"prop"`
-	Min      int           `vecty:"prop"`
-	Max      int           `vecty:"prop"`
-	Value    int           `vecty:"prop"`
-	Step     int           `vecty:"prop"`
-	Variant  SliderVariant `vecty:"prop"`
-	rendered bool
+	Name    string        `vecty:"prop"`
+	Min     int           `vecty:"prop"`
+	Max     int           `vecty:"prop"`
+	Value   int           `vecty:"prop"`
+	Step    int           `vecty:"prop"`
+	Variant SliderVariant `vecty:"prop"`
+	handle  js.Value
 }
 
 func (s *Slider) Mount() {
-	nsSlider.newFromId("MDCSlider", s.Name)
-	s.rendered = true
-	jlog.Debug(s)
+	jlog.Trace("Slider.Mount")
+	s.handle = nsSlider.newFromId("MDCSlider", s.Name)
 }
 
 func (s *Slider) SkipRender(prev vecty.Component) bool {
-	return s.rendered
+	skip := !s.handle.IsUndefined()
+	jlog.Trace("Slider.SkipRender() =>", skip)
+	return skip
+}
+
+func (s *Slider) Unmount() {
+	jlog.Trace("Slider.Unmount")
+	s.handle.Call("destroy")
+	s.handle = js.Undefined()
 }
 
 func (s *Slider) Render() vecty.ComponentOrHTML {
+	jlog.Trace("slider.Render")
 	if s.Name == "" {
 		panic(badFormID)
 	}
