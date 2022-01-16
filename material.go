@@ -435,12 +435,23 @@ func (dt *DataTable) rows() vecty.MarkupOrChild {
 // The examples in the online documentation do not yield a working slider?
 type Slider struct {
 	vecty.Core
-	Name    string        `vecty:"prop"`
-	Min     int           `vecty:"prop"`
-	Max     int           `vecty:"prop"`
-	Value   int           `vecty:"prop"`
-	Step    int           `vecty:"prop"`
-	Variant SliderVariant `vecty:"prop"`
+	Name     string        `vecty:"prop"`
+	Min      int           `vecty:"prop"`
+	Max      int           `vecty:"prop"`
+	Value    int           `vecty:"prop"`
+	Step     int           `vecty:"prop"`
+	Variant  SliderVariant `vecty:"prop"`
+	rendered bool
+}
+
+func (s *Slider) Mount() {
+	nsSlider.newFromId("MDCSlider", s.Name)
+	s.rendered = true
+	jlog.Debug(s)
+}
+
+func (s *Slider) SkipRender(prev vecty.Component) bool {
+	return s.rendered
 }
 
 func (s *Slider) Render() vecty.ComponentOrHTML {
@@ -471,7 +482,7 @@ func (s *Slider) inputs() (inputs vecty.MarkupOrChild) {
 		vecty.Class("mdc-slider__input"),
 		vecty.Property("min", s.Min),
 		vecty.Property("max", s.Max),
-		vecty.Property("value", s.Value),
+		vecty.Attribute("value", s.Value),
 		prop.Type(prop.TypeRange),
 		prop.Name(s.Name),
 		vecty.MarkupIf(s.Step > 0, vecty.Property("step", s.Step)),
@@ -552,4 +563,14 @@ func (tt *Tooltip) Render() vecty.ComponentOrHTML {
 			tt.Label,
 		),
 	)
+}
+
+// Mount TODO(soypat): is tricky business. Javascript must be called on the HTML node in the DOM
+// after it is rendered. Luckily tooltip should be static if not removed from the dom.
+// This probably breaks if tooltip is removed by vecty. Must find JS methods for "destroying"
+// the javascript handle to the tooltip for use with the vecty.Unmount interface.
+//
+// DO NOT CALL MOUNT METHOD YOURSELF. This method is called by vecty only.
+func (tt *Tooltip) Mount() {
+	nsTooltip.newFromId("MDCTooltip", tt.ID)
 }

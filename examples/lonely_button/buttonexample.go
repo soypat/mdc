@@ -54,6 +54,5 @@ func (b *Body) Render() vecty.ComponentOrHTML {
 				})),
 			),
 		),
-		mdc.JSInit(),
 	)
 }

@@ -28,13 +28,13 @@ var (
 func main() {
 	mdc.SetDefaultViewport()
 	mdc.AddDefaultStyles()
-
+	mdc.AddDefaultScripts()
 	body := &Body{}
 	globalListener = func() {
 		vecty.Rerender(body)
 	}
 	vecty.RenderInto("body", body)
-	mdc.AddDefaultScripts()
+
 	vecty.RenderBody(body)
 }
 
@@ -51,20 +51,26 @@ func (b *Body) Render() vecty.ComponentOrHTML {
 		elem.Main(
 			dt,
 			elem.Form(
-				vecty.Markup(vecty.UnsafeHTML(`<div class="mdc-slider">
-				<input class="mdc-slider__input" type="range" min="0" max="100" value="50" name="volume" aria-label="Continuous slider demo">
-				<div class="mdc-slider__track">
-				  <div class="mdc-slider__track--inactive"></div>
-				  <div class="mdc-slider__track--active">
-					<div class="mdc-slider__track--active_fill"></div>
-				  </div>
-				</div>
-				<div class="mdc-slider__thumb">
-				  <div class="mdc-slider__thumb-knob"></div>
-				</div>
-			  </div>`)),
+				&mdc.Slider{
+					Name:    "slider-1",
+					Max:     100,
+					Variant: mdc.VariantSliderDiscrete,
+				},
+			// 	vecty.Markup(vecty.UnsafeHTML(sliderHTML)),
 			),
 		),
-		mdc.JSInit(),
 	)
 }
+
+const sliderHTML = `<div class="mdc-slider">
+ 	<input class="mdc-slider__input" type="range" min="0" max="100" value="50" name="volume" aria-label="Continuous slider demo">
+ 	<div class="mdc-slider__track">
+ 	  <div class="mdc-slider__track--inactive"></div>
+ 	  <div class="mdc-slider__track--active">
+ 		<div class="mdc-slider__track--active_fill"></div>
+ 	  </div>
+ 	</div>
+ 	<div class="mdc-slider__thumb">
+ 	  <div class="mdc-slider__thumb-knob"></div>
+ 	</div>
+   </div>`
