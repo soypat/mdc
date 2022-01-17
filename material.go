@@ -586,3 +586,16 @@ func (tt *Tooltip) Render() vecty.ComponentOrHTML {
 func (tt *Tooltip) Mount() {
 	nsTooltip.newFromId("MDCTooltip", tt.ID)
 }
+
+type SPA struct {
+	vecty.Core
+	Navbar  *Navbar     `vecty:"prop"`
+	Drawer  *Leftbar    `vecty:"prop"`
+	Content *vecty.HTML `vecty:"prop"`
+}
+
+func (spa *SPA) Render() vecty.ComponentOrHTML {
+	return vecty.Text("",
+		spa.Navbar,
+	)
+}
