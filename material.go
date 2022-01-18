@@ -229,39 +229,64 @@ type Leftbar struct {
 	Subtitle    *vecty.HTML   `vecty:"prop"`
 	List        *List         `vecty:"prop"`
 	Dismissible bool          `vecty:"prop"`
-	Closed      bool          `vecty:"prop"`
+	StartClosed bool          `vecty:"prop"`
 	Applyer     vecty.Applyer `vecty:"prop"`
+	NoJS        bool          `vecty:"prop"`
+	handle      js.Value
 }
 
-func (c *Leftbar) Render() vecty.ComponentOrHTML {
-	if c.List.ListElem == defaultList {
+func (lb *Leftbar) Render() vecty.ComponentOrHTML {
+	if lb.List.ListElem == defaultList {
 		jlog.Trace("Leftbar Listelem autoset to nav")
-		c.List.ListElem = ElementNavigationList
+		lb.List.ListElem = ElementNavigationList
 	}
-	hasHeader := c.Title != nil || c.Subtitle != nil
+	hasHeader := lb.Title != nil || lb.Subtitle != nil
 	return vecty.Tag("aside",
 		vecty.Markup(
 			vecty.Class("mdc-drawer"),
-			vecty.MarkupIf(c.Applyer != nil, c.Applyer),
-			vecty.MarkupIf(c.Dismissible, vecty.Class("mdc-drawer--dismissible")),
-			vecty.MarkupIf(!c.Closed, vecty.Class("mdc-drawer--open")),
+			vecty.MarkupIf(lb.Applyer != nil, lb.Applyer),
+			vecty.MarkupIf(lb.Dismissible, vecty.Class("mdc-drawer--dismissible")),
+			vecty.MarkupIf(!lb.StartClosed, vecty.Class("mdc-drawer--open")),
 		),
 		elem.Div(
 			vecty.Markup(vecty.Class("mdc-drawer__content")),
 			vecty.If(hasHeader,
 				elem.Div(
 					vecty.Markup(vecty.Class("mdc-drawer__header")),
-					vecty.If(c.Title != nil, elem.Heading3(vecty.Markup(vecty.Class("mdc-drawer__title")),
-						c.Title,
+					vecty.If(lb.Title != nil, elem.Heading3(vecty.Markup(vecty.Class("mdc-drawer__title")),
+						lb.Title,
 					)),
-					vecty.If(c.Subtitle != nil, elem.Heading3(vecty.Markup(vecty.Class("mdc-drawer__subtitle")),
-						c.Subtitle,
+					vecty.If(lb.Subtitle != nil, elem.Heading3(vecty.Markup(vecty.Class("mdc-drawer__subtitle")),
+						lb.Subtitle,
 					)),
 				),
 			),
-			c.List,
+			lb.List,
 		),
 	)
+}
+
+func (lb *Leftbar) Mount() {
+	lb.handle = nsDrawer.newFromQuery("MDCDrawer", ".mdc-drawer")
+}
+
+func (lb *Leftbar) SkipRender(c vecty.Component) bool {
+	// DO NOT RENDER IF JAVASCRIPT HANDLE ACTIVE
+	// This breaks vecty since it relies on DOM diffing techique of rendering.
+	return !lb.handle.IsUndefined()
+}
+
+func (lb *Leftbar) Unmount() {
+	lb.handle.Call("destroy")
+}
+
+// Dismiss Only supposed to be used with javascript.
+func (lb *Leftbar) Dismiss(closed bool) {
+	lb.handle.Set("open", !closed)
+}
+
+func (lb *Leftbar) IsDismissed() (closed bool) {
+	return !lb.handle.Get("open").Bool()
 }
 
 // List implements the list Material Design component
@@ -298,6 +323,7 @@ type ListItem struct {
 	vecty.Core
 
 	Label        *vecty.HTML            `vecty:"prop"`
+	Href         string                 `vecty:"prop"`
 	Icon         icons.Icon             `vecty:"prop"`
 	ListItemElem ListItemElem           `vecty:"prop"`
 	Active       bool                   `vecty:"prop"`
@@ -306,6 +332,7 @@ type ListItem struct {
 
 func (l *ListItem) Render() vecty.ComponentOrHTML {
 	hasIcon := l.Icon.IsValid()
+	isAnchor := l.ListItemElem == ElementAnchorListItem && l.Href != ""
 	element := l.ListItemElem.Element()
 	listeners := make([]vecty.Applyer, len(l.Listeners))
 	for i := range l.Listeners {
@@ -316,6 +343,7 @@ func (l *ListItem) Render() vecty.ComponentOrHTML {
 			vecty.Class("mdc-list-item"),
 			vecty.MarkupIf(l.Active, vecty.Class("mdc-list-item--activated")),
 			vecty.MarkupIf(len(listeners) > 0, listeners...),
+			vecty.MarkupIf(isAnchor, prop.Href(l.Href)),
 		),
 
 		vecty.If(hasIcon,
@@ -593,6 +621,10 @@ func (tt *Tooltip) Render() vecty.ComponentOrHTML {
 // DO NOT CALL MOUNT METHOD YOURSELF. This method is called by vecty only.
 func (tt *Tooltip) Mount() {
 	nsTooltip.newFromId("MDCTooltip", tt.ID)
+}
+
+func (tt *Tooltip) Unmount() {
+	js.Global().Get("document").Call("getElementByID", tt.ID).Call("destroy")
 }
 
 // SPA implements the suggested combination of Appbar with

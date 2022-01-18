@@ -66,7 +66,7 @@ viewBox="0 0 24 24">
 </svg>
 <div class="mdc-checkbox__mixedmark"></div>`
 
-const spaCSS = `// Note: These styles do not account for any paddings/margins that you may need.
+const spaCSS = `/* Note: These styles do not account for any paddings/margins that you may need. */
 
 body {
   display: flex;
@@ -88,7 +88,7 @@ body {
   position: absolute;
 }
 
-// Only apply this style if below top app bar.
+/* Only apply this style if below top app bar. */
 .mdc-top-app-bar {
   z-index: 7;
 }`

@@ -7,6 +7,7 @@ type namespace string
 const (
 	nsTooltip namespace = "tooltip"
 	nsSlider  namespace = "slider"
+	nsDrawer  namespace = "drawer"
 )
 
 func (ns namespace) String() string {
