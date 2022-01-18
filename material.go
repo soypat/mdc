@@ -272,8 +272,8 @@ func (lb *Leftbar) Mount() {
 	jlog.Trace("Leftbar.Mount")
 	if lb.Variant.IsDismissable() {
 		handler := nsDrawer.newFromQuery("MDCDrawer", lb.id())
-		globalHandlers.registerID(lb.id(), handler)
-		jlog.Trace("Leftbar.Mount success")
+		err := globalHandlers.registerID(lb.id(), handler)
+		jlog.Trace("Leftbar.Mount success", err)
 	}
 }
 
@@ -286,7 +286,7 @@ func (lb *Leftbar) SkipRender(c vecty.Component) bool {
 func (lb *Leftbar) Unmount() {
 	jlog.Trace("Leftbar.Unmount")
 	if lb.Variant.IsDismissable() {
-		DestroyHandler(lb)
+		destroyHandler(lb)
 		jlog.Trace("Unmount.destroy success")
 	}
 }
@@ -499,7 +499,10 @@ func (s *Slider) id() string { return s.Name }
 func (s *Slider) Mount() {
 	jlog.Trace("Slider.Mount")
 	handle := nsSlider.newFromId("MDCSlider", s.Name)
-	globalHandlers.registerID(s.id(), handle)
+	err := globalHandlers.registerID(s.id(), handle)
+	if err != nil {
+		jlog.Debug("Slider.Mount register error", err)
+	}
 }
 
 func (s *Slider) SkipRender(prev vecty.Component) bool {
@@ -510,7 +513,7 @@ func (s *Slider) SkipRender(prev vecty.Component) bool {
 
 func (s *Slider) Unmount() {
 	jlog.Trace("Slider.Unmount")
-	DestroyHandler(s)
+	destroyHandler(s)
 }
 
 func (s *Slider) Render() vecty.ComponentOrHTML {
@@ -639,7 +642,7 @@ func (tt *Tooltip) Mount() {
 }
 
 func (tt *Tooltip) Unmount() {
-	DestroyHandler(tt)
+	destroyHandler(tt)
 }
 
 // SPA implements the suggested combination of Appbar with

@@ -21,9 +21,9 @@ func Handler(c JSComponent) js.Value {
 	return globalHandlers.getID(c.id())
 }
 
-// DestroyHandler calls the finalizer of the javascript handler
+// destroyHandler calls the finalizer of the javascript handler
 // and unregisters the id.
-func DestroyHandler(c JSComponent) {
+func destroyHandler(c JSComponent) {
 	id := c.id()
 	globalHandlers.getID(id).Call("destroy")
 	globalHandlers.unregisterID(id)
@@ -43,6 +43,7 @@ func newHandlerStore() handlerStore {
 func (hs handlerStore) registerID(id string, handler js.Value) error {
 	_, present := hs.id[id]
 	if present {
+		panic(errHandlerAlreadyRegistered) // TODO(soypat): Remove this panic when ready for production.
 		return errHandlerAlreadyRegistered
 	}
 	hs.id[id] = handler
