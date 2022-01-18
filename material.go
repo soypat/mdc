@@ -120,9 +120,12 @@ func (tb *Navbar) Render() vecty.ComponentOrHTML {
 	for _, e := range tb.SectionEnd {
 		tb.apply(e)
 	}
-	return elem.Header(vecty.Markup(vecty.Class("mdc-top-app-bar", tb.Variant.ClassName())),
+	return elem.Header(vecty.Markup(vecty.Class("app-bar", "mdc-top-app-bar", tb.Variant.ClassName()), prop.ID(appBarID)),
 
-		elem.Div(vecty.Markup(vecty.Class("mdc-top-app-bar__row")),
+		elem.Div(vecty.Markup(
+			vecty.Class("mdc-top-app-bar__row"),
+		),
+
 			//Div contents
 			vecty.If(len(tb.SectionStart) != 0,
 				elem.Section(
@@ -222,19 +225,24 @@ func newButtonIcon(kind icons.Icon) *icon {
 type Leftbar struct {
 	vecty.Core
 
-	Title       *vecty.HTML `vecty:"prop"`
-	Subtitle    *vecty.HTML `vecty:"prop"`
-	List        *List       `vecty:"prop"`
-	Dismissible bool        `vecty:"prop"`
-	Closed      bool        `vecty:"prop"`
+	Title       *vecty.HTML   `vecty:"prop"`
+	Subtitle    *vecty.HTML   `vecty:"prop"`
+	List        *List         `vecty:"prop"`
+	Dismissible bool          `vecty:"prop"`
+	Closed      bool          `vecty:"prop"`
+	Applyer     vecty.Applyer `vecty:"prop"`
 }
 
 func (c *Leftbar) Render() vecty.ComponentOrHTML {
-	c.List.ListElem = ElementNavigation
+	if c.List.ListElem == defaultList {
+		jlog.Trace("Leftbar Listelem autoset to nav")
+		c.List.ListElem = ElementNavigationList
+	}
 	hasHeader := c.Title != nil || c.Subtitle != nil
 	return vecty.Tag("aside",
 		vecty.Markup(
 			vecty.Class("mdc-drawer"),
+			vecty.MarkupIf(c.Applyer != nil, c.Applyer),
 			vecty.MarkupIf(c.Dismissible, vecty.Class("mdc-drawer--dismissible")),
 			vecty.MarkupIf(!c.Closed, vecty.Class("mdc-drawer--open")),
 		),
@@ -587,15 +595,53 @@ func (tt *Tooltip) Mount() {
 	nsTooltip.newFromId("MDCTooltip", tt.ID)
 }
 
+// SPA implements the suggested combination of Appbar with
+// a drawer component according to Material Design guidelines
+// https://material.io/components/navigation-drawer/web
+// (see Usage with top app bar)
 type SPA struct {
 	vecty.Core
-	Navbar  *Navbar     `vecty:"prop"`
-	Drawer  *Leftbar    `vecty:"prop"`
-	Content *vecty.HTML `vecty:"prop"`
+	Navbar           *Navbar             `vecty:"prop"`
+	Drawer           *Leftbar            `vecty:"prop"`
+	Content          vecty.MarkupOrChild `vecty:"prop"`
+	FullHeightDrawer bool                `vecty:"prop"`
 }
 
 func (spa *SPA) Render() vecty.ComponentOrHTML {
-	return vecty.Text("",
+	style := elem.Style(vecty.Markup(vecty.UnsafeHTML(spaCSS)))
+	spa.Drawer.List.ListElem = ElementDivList
+	nbAdjust := VariantTopBarFixed.AdjustClassName()
+	if spa.FullHeightDrawer {
+		return elem.Div(
+			style,
+			spa.Drawer,
+			elem.Div(vecty.Markup(vecty.Class("mdc-drawer-app-content")),
+				spa.Navbar,
+				elem.Main(vecty.Markup(
+					vecty.Class("main-content"),
+					prop.ID("main-content"),
+				),
+					elem.Div(vecty.Markup(vecty.Class(nbAdjust)),
+						spa.Content,
+					),
+				),
+			),
+		)
+	}
+	// TODO(soypat): Fix this branch. Drawer is being
+	// rendered as full height. Might have missed something subtle...
+	spa.Drawer.Applyer = vecty.Class(nbAdjust)
+	return elem.Div(
+		style,
 		spa.Navbar,
+		spa.Drawer,
+		elem.Div(vecty.Markup(vecty.Class("mdc-drawer-app-content", nbAdjust)),
+			elem.Main(vecty.Markup(
+				vecty.Class("main-content"),
+				prop.ID("main-content"),
+			),
+				spa.Content,
+			),
+		),
 	)
 }

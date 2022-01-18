@@ -127,30 +127,39 @@ func (ts TypographyStyle) IsHeadline() bool {
 type AppBarVariant int
 
 const (
-	VariantTopBarShort AppBarVariant = iota
+	variantTopBarDefault AppBarVariant = iota
+	VariantTopBarShort
 	VariantTopBarShortCollapsed
 	VariantTopBarFixed
 	VariantTopBarProminent
 	VariantTopBarDense
 )
 
+const appBarID = "app-bar"
+
 func (bv AppBarVariant) ClassName() (class string) {
-	class = "mdc-top-app-bar--"
+	class = "mdc-top-app-bar"
 	switch bv {
+	case variantTopBarDefault:
+		// No modifier to class.
 	case VariantTopBarShort:
-		class += "short"
+		class += "--short"
 	case VariantTopBarShortCollapsed:
-		class += "short-collapsed"
+		class += "--short-collapsed"
 	case VariantTopBarFixed:
-		class += "fixed"
+		class += "--fixed"
 	case VariantTopBarProminent:
-		class += "prominent"
+		class += "--prominent"
 	case VariantTopBarDense:
-		class += "dense"
+		class += "--dense"
 	default:
 		panic("mdc: unknown top bar variant")
 	}
 	return class
+}
+
+func (bv AppBarVariant) AdjustClassName() (class string) {
+	return bv.ClassName() + "-adjust"
 }
 
 type ListElem int
@@ -159,14 +168,17 @@ const (
 	defaultList ListElem = iota
 	ElementUnorderedList
 	ElementOrderedList
-	ElementNavigation
+	ElementNavigationList
+	ElementDivList
 )
 
 func (le ListElem) Element() (element func(markup ...vecty.MarkupOrChild) *vecty.HTML) {
 	switch le {
 	case ElementUnorderedList, defaultList:
 		element = elem.UnorderedList
-	case ElementNavigation:
+	case ElementDivList:
+		element = elem.Div
+	case ElementNavigationList:
 		element = elem.Navigation
 	case ElementOrderedList:
 		element = elem.OrderedList
