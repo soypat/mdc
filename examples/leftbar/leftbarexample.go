@@ -5,6 +5,7 @@ import (
 	"github.com/hexops/vecty/elem"
 	"github.com/hexops/vecty/event"
 	"github.com/soypat/mdc"
+	"github.com/soypat/mdc/examples/jlog"
 	"github.com/soypat/mdc/icons"
 )
 
@@ -26,7 +27,7 @@ func main() {
 	mdc.SetDefaultViewport()
 	mdc.AddDefaultStyles()
 	mdc.AddDefaultScripts()
-
+	jlog.PackageLevel = jlog.LevelTrace
 	body := &Body{}
 	globalListener = func() {
 		vecty.Rerender(body)
@@ -36,9 +37,11 @@ func main() {
 
 type Body struct {
 	vecty.Core
-
-	barOpen  bool
 	selected int
+	// A handle is required to Leftbar since
+	// it is modified by JS and is not rendered again
+	// after first render.
+	lbHandle *mdc.Leftbar
 }
 
 func (b *Body) Render() vecty.ComponentOrHTML {
@@ -52,19 +55,17 @@ func (b *Body) Render() vecty.ComponentOrHTML {
 
 	selectedItem := items[b.selected].(*mdc.ListItem)
 	selectedItem.Active = true
-
-	lb := &mdc.Leftbar{
-		Dismissible: true,
-		Closed:      !b.barOpen,
-		Title:       vecty.Text("Welcome user"),
-		Subtitle:    vecty.Text("NewAge Groceries welcomes you"),
-		List: &mdc.List{
-			ClickListener: func(idx int, e *vecty.Event) {
-				b.selected = idx
-				globalListener()
+	if b.lbHandle == nil {
+		b.lbHandle = &mdc.Leftbar{
+			Variant:     mdc.VariantDismissableLeftbar,
+			StartClosed: false,
+			Title:       vecty.Text("Welcome user"),
+			Subtitle:    vecty.Text("NewAge Groceries welcomes you"),
+			List: &mdc.List{
+				ClickListener: b.listenDehaze,
+				List:          items,
 			},
-			List: items,
-		},
+		}
 	}
 
 	// TODO(soypat): Add material animation
@@ -79,12 +80,12 @@ func (b *Body) Render() vecty.ComponentOrHTML {
 	but := &mdc.Button{
 		Icon: icons.Dehaze,
 		Listeners: []*vecty.EventListener{event.Click(func(e *vecty.Event) {
-			b.barOpen = !b.barOpen
+			b.lbHandle.Dismiss(!b.lbHandle.IsDismissed())
 			globalListener()
 		})},
 	}
 	return elem.Body(
-		lb,
+		b.lbHandle,
 		elem.Div(vecty.Markup(vecty.Class("main-content", "mdc-drawer-app-content")),
 			elem.Main(
 				but,
@@ -98,4 +99,9 @@ func (b *Body) Render() vecty.ComponentOrHTML {
 			),
 		),
 	)
+}
+
+func (b *Body) listenDehaze(idx int, e *vecty.Event) {
+	b.selected = idx
+	globalListener()
 }

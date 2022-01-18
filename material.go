@@ -225,17 +225,19 @@ func newButtonIcon(kind icons.Icon) *icon {
 type Leftbar struct {
 	vecty.Core
 
-	Title       *vecty.HTML   `vecty:"prop"`
-	Subtitle    *vecty.HTML   `vecty:"prop"`
-	List        *List         `vecty:"prop"`
-	Dismissible bool          `vecty:"prop"`
-	StartClosed bool          `vecty:"prop"`
-	Applyer     vecty.Applyer `vecty:"prop"`
-	NoJS        bool          `vecty:"prop"`
+	Title       *vecty.HTML    `vecty:"prop"`
+	Subtitle    *vecty.HTML    `vecty:"prop"`
+	List        *List          `vecty:"prop"`
+	Variant     LeftbarVariant `vecty:"prop"`
+	StartClosed bool           `vecty:"prop"`
+	Applyer     vecty.Applyer  `vecty:"prop"`
+	NoJS        bool           `vecty:"prop"`
 	handle      js.Value
 }
 
 func (lb *Leftbar) Render() vecty.ComponentOrHTML {
+	jlog.Trace("Leftbar.Render")
+	dismissable := lb.Variant.IsDismissable()
 	if lb.List.ListElem == defaultList {
 		jlog.Trace("Leftbar Listelem autoset to nav")
 		lb.List.ListElem = ElementNavigationList
@@ -245,7 +247,7 @@ func (lb *Leftbar) Render() vecty.ComponentOrHTML {
 		vecty.Markup(
 			vecty.Class("mdc-drawer"),
 			vecty.MarkupIf(lb.Applyer != nil, lb.Applyer),
-			vecty.MarkupIf(lb.Dismissible, vecty.Class("mdc-drawer--dismissible")),
+			vecty.MarkupIf(dismissable, vecty.Class("mdc-drawer--dismissible")),
 			vecty.MarkupIf(!lb.StartClosed, vecty.Class("mdc-drawer--open")),
 		),
 		elem.Div(
@@ -267,17 +269,27 @@ func (lb *Leftbar) Render() vecty.ComponentOrHTML {
 }
 
 func (lb *Leftbar) Mount() {
-	lb.handle = nsDrawer.newFromQuery("MDCDrawer", ".mdc-drawer")
+	jlog.Trace("Leftbar.Mount")
+	if lb.Variant.IsDismissable() {
+		lb.handle = nsDrawer.newFromQuery("MDCDrawer", ".mdc-drawer")
+		jlog.Trace("Leftbar.Mount success")
+	}
 }
 
 func (lb *Leftbar) SkipRender(c vecty.Component) bool {
 	// DO NOT RENDER IF JAVASCRIPT HANDLE ACTIVE
 	// This breaks vecty since it relies on DOM diffing techique of rendering.
-	return !lb.handle.IsUndefined()
+	skip := !lb.handle.IsUndefined()
+	jlog.Trace("Leftbar.SkipRender()=>", skip)
+	return skip
 }
 
 func (lb *Leftbar) Unmount() {
-	lb.handle.Call("destroy")
+	jlog.Trace("Leftbar.Unmount")
+	if lb.Variant.IsDismissable() {
+		lb.handle.Call("destroy")
+		jlog.Trace("Unmount.destroy success")
+	}
 }
 
 // Dismiss Only supposed to be used with javascript.

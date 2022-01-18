@@ -30,6 +30,19 @@ func (bs ButtonStyle) ClassName() (class string) {
 	return class
 }
 
+type LeftbarVariant int
+
+const (
+	defaultLeftbarVariant LeftbarVariant = iota
+	VariantStandardLeftbar
+	VariantDismissableLeftbar
+	VariantModalLeftbar
+)
+
+func (lb LeftbarVariant) IsDismissable() bool {
+	return lb == VariantDismissableLeftbar || lb == VariantModalLeftbar
+}
+
 type Size int
 
 const (

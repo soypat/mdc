@@ -37,9 +37,9 @@ func (b *Body) Render() vecty.ComponentOrHTML {
 	spa := &mdc.SPA{
 		FullHeightDrawer: false,
 		Drawer: &mdc.Leftbar{
-			// Title:       vecty.Text(title),
-			// Subtitle:    vecty.Text(motto),
-			Dismissible: true,
+			Title:    vecty.Text(title),
+			Subtitle: vecty.Text(motto),
+			Variant:  mdc.VariantDismissableLeftbar,
 			List: &mdc.List{
 				ListElem: mdc.ElementNavigationList,
 				List: vecty.List{
@@ -52,6 +52,8 @@ func (b *Body) Render() vecty.ComponentOrHTML {
 		},
 		Content: &mdc.Typography{Root: vecty.Text("The future, all in one place. Now. Buy now.")},
 	}
+	// Dehaze is the three-horizontal-line icon commonly used for
+	// indicating a dismissible menu list of action items.
 	dehaze := &mdc.Button{
 		Icon: icons.Dehaze,
 		Listeners: []*vecty.EventListener{event.Click(func(e *vecty.Event) {
@@ -59,14 +61,12 @@ func (b *Body) Render() vecty.ComponentOrHTML {
 		})},
 	}
 	spa.Navbar = &mdc.Navbar{
-		// Variant: mdc.VariantTopBarFixed,
 		SectionStart: vecty.List{
 			dehaze,
 			&mdc.Typography{Root: vecty.Text(title), Style: mdc.Headline6},
 		},
 	}
 	return elem.Body(
-		// vecty.Markup(vecty.UnsafeHTML(fullwidth)),
 		spa,
 	)
 }
