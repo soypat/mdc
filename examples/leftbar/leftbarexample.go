@@ -38,10 +38,6 @@ func main() {
 type Body struct {
 	vecty.Core
 	selected int
-	// A handle is required to Leftbar since
-	// it is modified by JS and is not rendered again
-	// after first render.
-	lbHandle *mdc.Leftbar
 }
 
 func (b *Body) Render() vecty.ComponentOrHTML {
@@ -55,17 +51,15 @@ func (b *Body) Render() vecty.ComponentOrHTML {
 
 	selectedItem := items[b.selected].(*mdc.ListItem)
 	selectedItem.Active = true
-	if b.lbHandle == nil {
-		b.lbHandle = &mdc.Leftbar{
-			Variant:     mdc.VariantDismissableLeftbar,
-			StartClosed: false,
-			Title:       vecty.Text("Welcome user"),
-			Subtitle:    vecty.Text("NewAge Groceries welcomes you"),
-			List: &mdc.List{
-				ClickListener: b.listenDehaze,
-				List:          items,
-			},
-		}
+	lb := &mdc.Leftbar{
+		Variant:     mdc.VariantDismissableLeftbar,
+		StartClosed: false,
+		Title:       vecty.Text("Welcome user"),
+		Subtitle:    vecty.Text("NewAge Groceries welcomes you"),
+		List: &mdc.List{
+			ClickListener: b.listenDehaze,
+			List:          items,
+		},
 	}
 
 	// TODO(soypat): Add material animation
@@ -80,12 +74,12 @@ func (b *Body) Render() vecty.ComponentOrHTML {
 	but := &mdc.Button{
 		Icon: icons.Dehaze,
 		Listeners: []*vecty.EventListener{event.Click(func(e *vecty.Event) {
-			b.lbHandle.Dismiss(!b.lbHandle.IsDismissed())
+			lb.Dismiss(!lb.IsDismissed())
 			globalListener()
 		})},
 	}
 	return elem.Body(
-		b.lbHandle,
+		lb,
 		elem.Div(vecty.Markup(vecty.Class("main-content", "mdc-drawer-app-content")),
 			elem.Main(
 				but,

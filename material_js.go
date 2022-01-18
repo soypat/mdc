@@ -1,6 +1,61 @@
 package mdc
 
-import "syscall/js"
+import (
+	"errors"
+	"syscall/js"
+)
+
+var globalHandlers = newHandlerStore()
+
+var (
+	errHandlerAlreadyRegistered = errors.New("tried to register an existing id. Make sure IDs are unique or that you are not rendering single page components (i.e. Leftbar, Navbar) multiple times")
+)
+
+type JSComponent interface {
+	id() string
+}
+
+// Handler returns the underlying javascript object which controls
+// the rendering of c.
+func Handler(c JSComponent) js.Value {
+	return globalHandlers.getID(c.id())
+}
+
+// DestroyHandler calls the finalizer of the javascript handler
+// and unregisters the id.
+func DestroyHandler(c JSComponent) {
+	id := c.id()
+	globalHandlers.getID(id).Call("destroy")
+	globalHandlers.unregisterID(id)
+}
+
+type handlerStore struct {
+	// ID registered handlers.
+	id map[string]js.Value
+}
+
+func newHandlerStore() handlerStore {
+	return handlerStore{
+		id: make(map[string]js.Value),
+	}
+}
+
+func (hs handlerStore) registerID(id string, handler js.Value) error {
+	_, present := hs.id[id]
+	if present {
+		return errHandlerAlreadyRegistered
+	}
+	hs.id[id] = handler
+	return nil
+}
+
+func (hs handlerStore) getID(id string) js.Value {
+	return hs.id[id]
+}
+
+func (hs handlerStore) unregisterID(id string) {
+	delete(hs.id, id)
+}
 
 type namespace string
 
@@ -36,7 +91,7 @@ func (ns namespace) new(obj string, args ...interface{}) js.Value {
 // Equivalent of
 //  value = new mdc.namespace.obj(document.getElementById(id))
 func (ns namespace) newFromId(obj, id string) js.Value {
-	el := js.Global().Get("document").Call("getElementById", id)
+	el := docGetByID(id)
 	if el.IsNull() {
 		panic("element of id " + id + " not found")
 	}
@@ -46,9 +101,17 @@ func (ns namespace) newFromId(obj, id string) js.Value {
 // Equivalent of
 //  value = new mdc.namespace.obj(document.querySelector(selector))
 func (ns namespace) newFromQuery(obj, selector string) js.Value {
-	el := js.Global().Get("document").Call("querySelector", selector)
+	el := docQuery(selector)
 	if el.IsNull() {
 		panic("no elements found with selector: " + selector)
 	}
 	return ns.new(obj, el)
+}
+
+func docGetByID(id string) js.Value {
+	return js.Global().Get("document").Call("getElementById", id)
+}
+
+func docQuery(selector string) js.Value {
+	return js.Global().Get("document").Call("querySelector", selector)
 }

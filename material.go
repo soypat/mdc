@@ -2,7 +2,6 @@ package mdc
 
 import (
 	"strconv"
-	"syscall/js"
 
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"
@@ -232,8 +231,9 @@ type Leftbar struct {
 	StartClosed bool           `vecty:"prop"`
 	Applyer     vecty.Applyer  `vecty:"prop"`
 	NoJS        bool           `vecty:"prop"`
-	handle      js.Value
 }
+
+func (lb *Leftbar) id() string { return ".mdc-drawer" }
 
 func (lb *Leftbar) Render() vecty.ComponentOrHTML {
 	jlog.Trace("Leftbar.Render")
@@ -271,15 +271,14 @@ func (lb *Leftbar) Render() vecty.ComponentOrHTML {
 func (lb *Leftbar) Mount() {
 	jlog.Trace("Leftbar.Mount")
 	if lb.Variant.IsDismissable() {
-		lb.handle = nsDrawer.newFromQuery("MDCDrawer", ".mdc-drawer")
+		handler := nsDrawer.newFromQuery("MDCDrawer", lb.id())
+		globalHandlers.registerID(lb.id(), handler)
 		jlog.Trace("Leftbar.Mount success")
 	}
 }
 
 func (lb *Leftbar) SkipRender(c vecty.Component) bool {
-	// DO NOT RENDER IF JAVASCRIPT HANDLE ACTIVE
-	// This breaks vecty since it relies on DOM diffing techique of rendering.
-	skip := !lb.handle.IsUndefined()
+	skip := !Handler(lb).IsUndefined()
 	jlog.Trace("Leftbar.SkipRender()=>", skip)
 	return skip
 }
@@ -287,18 +286,18 @@ func (lb *Leftbar) SkipRender(c vecty.Component) bool {
 func (lb *Leftbar) Unmount() {
 	jlog.Trace("Leftbar.Unmount")
 	if lb.Variant.IsDismissable() {
-		lb.handle.Call("destroy")
+		DestroyHandler(lb)
 		jlog.Trace("Unmount.destroy success")
 	}
 }
 
 // Dismiss Only supposed to be used with javascript.
 func (lb *Leftbar) Dismiss(closed bool) {
-	lb.handle.Set("open", !closed)
+	Handler(lb).Set("open", !closed)
 }
 
 func (lb *Leftbar) IsDismissed() (closed bool) {
-	return !lb.handle.Get("open").Bool()
+	return !Handler(lb).Get("open").Bool()
 }
 
 // List implements the list Material Design component
@@ -493,24 +492,25 @@ type Slider struct {
 	Value   int           `vecty:"prop"`
 	Step    int           `vecty:"prop"`
 	Variant SliderVariant `vecty:"prop"`
-	handle  js.Value
 }
+
+func (s *Slider) id() string { return s.Name }
 
 func (s *Slider) Mount() {
 	jlog.Trace("Slider.Mount")
-	s.handle = nsSlider.newFromId("MDCSlider", s.Name)
+	handle := nsSlider.newFromId("MDCSlider", s.Name)
+	globalHandlers.registerID(s.id(), handle)
 }
 
 func (s *Slider) SkipRender(prev vecty.Component) bool {
-	skip := !s.handle.IsUndefined()
+	skip := !Handler(s).IsUndefined()
 	jlog.Trace("Slider.SkipRender() =>", skip)
 	return skip
 }
 
 func (s *Slider) Unmount() {
 	jlog.Trace("Slider.Unmount")
-	s.handle.Call("destroy")
-	s.handle = js.Undefined()
+	DestroyHandler(s)
 }
 
 func (s *Slider) Render() vecty.ComponentOrHTML {
@@ -603,6 +603,8 @@ type Tooltip struct {
 	Label *vecty.HTML `vecty:"prop"`
 }
 
+func (tt *Tooltip) id() string { return tt.ID }
+
 func (tt *Tooltip) Apply(h *vecty.HTML) {
 	vecty.Markup(
 		vecty.Attribute("aria-describedby", tt.ID),
@@ -632,11 +634,12 @@ func (tt *Tooltip) Render() vecty.ComponentOrHTML {
 //
 // DO NOT CALL MOUNT METHOD YOURSELF. This method is called by vecty only.
 func (tt *Tooltip) Mount() {
-	nsTooltip.newFromId("MDCTooltip", tt.ID)
+	handler := nsTooltip.newFromId("MDCTooltip", tt.ID)
+	globalHandlers.registerID(tt.id(), handler)
 }
 
 func (tt *Tooltip) Unmount() {
-	js.Global().Get("document").Call("getElementByID", tt.ID).Call("destroy")
+	DestroyHandler(tt)
 }
 
 // SPA implements the suggested combination of Appbar with
