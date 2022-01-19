@@ -2,13 +2,15 @@ package mdc
 
 import (
 	"errors"
+	"strconv"
 	"syscall/js"
 )
 
 var globalHandlers = newHandlerStore()
 
 var (
-	errHandlerAlreadyRegistered = errors.New("tried to register an existing id. Make sure IDs are unique or that you are not rendering single page components (i.e. Leftbar, Navbar) multiple times")
+	errHandlerAlreadyRegistered = errors.New("tried to register an existing/empty id for a javascript handle to a MDC component. " +
+		"Make sure IDs are unique or that you are not rendering single page components (i.e. Leftbar, Navbar) multiple times")
 )
 
 type JSComponent interface {
@@ -32,6 +34,8 @@ func destroyHandler(c JSComponent) {
 type handlerStore struct {
 	// ID registered handlers.
 	id map[string]js.Value
+	// Automatic ID assignation scheme.
+	auto int
 }
 
 func newHandlerStore() handlerStore {
@@ -40,10 +44,27 @@ func newHandlerStore() handlerStore {
 	}
 }
 
-func (hs handlerStore) registerID(id string, handler js.Value) error {
+func (hs *handlerStore) getUnique() (id string) {
+	for {
+		hs.auto++
+		id = "umdc" + strconv.Itoa(hs.auto)
+		if hs.isFree(id) {
+			return id
+		}
+	}
+}
+
+func (hs handlerStore) isFree(id string) bool {
+	if id == "" {
+		return false
+	}
 	_, present := hs.id[id]
-	if present {
-		panic(errHandlerAlreadyRegistered) // TODO(soypat): Remove this panic when ready for production.
+	return !present
+}
+
+func (hs handlerStore) registerID(id string, handler js.Value) error {
+	if !hs.isFree(id) {
+		panic(errHandlerAlreadyRegistered.Error() + " concerning id: \"" + id + "\"") // TODO(soypat): Remove this panic when ready for production.
 		return errHandlerAlreadyRegistered
 	}
 	hs.id[id] = handler
@@ -64,6 +85,7 @@ const (
 	nsTooltip namespace = "tooltip"
 	nsSlider  namespace = "slider"
 	nsDrawer  namespace = "drawer"
+	nsList    namespace = "list"
 )
 
 func (ns namespace) String() string {

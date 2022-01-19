@@ -41,6 +41,7 @@ func (b *Body) Render() vecty.ComponentOrHTML {
 			Subtitle: vecty.Text(motto),
 			Variant:  mdc.VariantDismissableLeftbar,
 			List: &mdc.List{
+				ID:       "list-111",
 				ListElem: mdc.ElementNavigationList,
 				List: vecty.List{
 					&mdc.ListItem{Label: vecty.Text("Visit our hot sale"), Icon: icons.PointOfSale, ListItemElem: mdc.ElementAnchorListItem, Href: "#dsd"},

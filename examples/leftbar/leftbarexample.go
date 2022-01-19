@@ -44,8 +44,11 @@ func (b *Body) Render() vecty.ComponentOrHTML {
 	var items vecty.List
 	for _, page := range content {
 		items = append(items, &mdc.ListItem{
-			Label: vecty.Text(page.title),
-			Icon:  page.icon,
+			Label:        elem.Span(&mdc.Typography{Root: vecty.Text(page.title)}), //vecty.Text(page.title),
+			Icon:         page.icon,
+			ListItemElem: mdc.ElementAnchorListItem,
+			Href:         "#",
+			Ripple:       true,
 		})
 	}
 
@@ -57,6 +60,7 @@ func (b *Body) Render() vecty.ComponentOrHTML {
 		Title:       vecty.Text("Welcome user"),
 		Subtitle:    vecty.Text("NewAge Groceries welcomes you"),
 		List: &mdc.List{
+			// ID:            "list-1",
 			ClickListener: b.listenDehaze,
 			List:          items,
 		},

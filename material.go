@@ -270,7 +270,7 @@ func (lb *Leftbar) Render() vecty.ComponentOrHTML {
 
 func (lb *Leftbar) Mount() {
 	jlog.Trace("Leftbar.Mount")
-	if lb.Variant.IsDismissable() {
+	if lb.Variant.IsDismissable() && !lb.NoJS {
 		handler := nsDrawer.newFromQuery("MDCDrawer", lb.id())
 		err := globalHandlers.registerID(lb.id(), handler)
 		jlog.Trace("Leftbar.Mount success", err)
@@ -285,17 +285,22 @@ func (lb *Leftbar) SkipRender(c vecty.Component) bool {
 
 func (lb *Leftbar) Unmount() {
 	jlog.Trace("Leftbar.Unmount")
-	if lb.Variant.IsDismissable() {
+	if lb.Variant.IsDismissable() && !lb.NoJS {
 		destroyHandler(lb)
 		jlog.Trace("Unmount.destroy success")
 	}
 }
 
-// Dismiss Only supposed to be used with javascript.
+// Dismiss opens/closes a dismissable drawer (Dismissable and modal variants).
+//
+// Is a javascript binding.
 func (lb *Leftbar) Dismiss(closed bool) {
 	Handler(lb).Set("open", !closed)
 }
 
+// Dismiss is dismissed returns true if drawer is closed (Dismissable and modal variants).
+//
+// Is a javascript binding.
 func (lb *Leftbar) IsDismissed() (closed bool) {
 	return !Handler(lb).Get("open").Bool()
 }
@@ -304,11 +309,14 @@ func (lb *Leftbar) IsDismissed() (closed bool) {
 // https://material.io/components/lists.
 type List struct {
 	vecty.Core
-
+	// Optional field. If empty string is passed will not register javascript handler.
+	ID            string                        `vecty:"prop"`
 	List          vecty.List                    `vecty:"prop"`
 	ListElem      ListElem                      `vecty:"prop"`
 	ClickListener func(idx int, e *vecty.Event) `vecty:"prop"`
 }
+
+func (l *List) id() string { return l.ID }
 
 func (l *List) Render() vecty.ComponentOrHTML {
 	element := l.ListElem.Element()
@@ -324,9 +332,36 @@ func (l *List) Render() vecty.ComponentOrHTML {
 		}
 	}
 
-	return element(vecty.Markup(vecty.Class("mdc-list")),
+	return element(vecty.Markup(
+		vecty.Class("mdc-list"),
+		vecty.MarkupIf(l.ID != "", prop.ID(l.ID)),
+	),
 		l.List,
 	)
+}
+
+func (l *List) Mount() {
+	jlog.Trace("List.Mount")
+	if l.ID != "" {
+		handler := nsList.newFromId("MDCList", l.id())
+		err := globalHandlers.registerID(l.id(), handler)
+		jlog.Trace("List.Mount err:", err)
+	}
+}
+
+func (l *List) SkipRender(c vecty.Component) (skip bool) {
+	if l.ID != "" {
+		skip = !Handler(l).IsUndefined()
+	}
+	jlog.Trace("List.SkipRender()=>", skip)
+	return skip
+}
+
+func (l *List) Unmount() {
+	jlog.Trace("List.Unmount")
+	if l.ID != "" {
+		destroyHandler(l)
+	}
 }
 
 // ListItem is a component for use with the List component.
@@ -339,6 +374,7 @@ type ListItem struct {
 	ListItemElem ListItemElem           `vecty:"prop"`
 	Active       bool                   `vecty:"prop"`
 	Listeners    []*vecty.EventListener `vecty:"prop"`
+	Ripple       bool                   `vecty:"prop"`
 }
 
 func (l *ListItem) Render() vecty.ComponentOrHTML {
@@ -356,7 +392,7 @@ func (l *ListItem) Render() vecty.ComponentOrHTML {
 			vecty.MarkupIf(len(listeners) > 0, listeners...),
 			vecty.MarkupIf(isAnchor, prop.Href(l.Href)),
 		),
-
+		vecty.If(l.Ripple, elem.Span(vecty.Markup(vecty.Class("mdc-list-item__ripple")))),
 		vecty.If(hasIcon,
 			vecty.Tag("i", vecty.Markup(vecty.Class("material-icons", "mdc-list-item__graphic")),
 				vecty.Text(l.Icon.Name()),
