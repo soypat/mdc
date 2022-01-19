@@ -44,7 +44,7 @@ func (b *Body) Render() vecty.ComponentOrHTML {
 	var items vecty.List
 	for _, page := range content {
 		items = append(items, &mdc.ListItem{
-			Label:        elem.Span(&mdc.Typography{Root: vecty.Text(page.title)}), //vecty.Text(page.title),
+			Label:        vecty.Text(page.title),
 			Icon:         page.icon,
 			ListItemElem: mdc.ElementAnchorListItem,
 			Href:         "#",
