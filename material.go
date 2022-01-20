@@ -193,6 +193,7 @@ func (tb *Navbar) apply(sectionItem vecty.ComponentOrHTML) {
 
 type icon struct {
 	vecty.Core
+
 	Kind    icons.Icon `vecty:"prop"`
 	Subtype string     `vecty:"prop"`
 }
@@ -294,8 +295,8 @@ func (lb *Leftbar) Unmount() {
 // Dismiss opens/closes a dismissable drawer (Dismissable and modal variants).
 //
 // Is a javascript binding.
-func (lb *Leftbar) Dismiss(closed bool) {
-	Handler(lb).Set("open", !closed)
+func (lb *Leftbar) Dismiss(close bool) {
+	Handler(lb).Set("open", !close)
 }
 
 // Dismiss is dismissed returns true if drawer is closed (Dismissable and modal variants).
@@ -309,11 +310,14 @@ func (lb *Leftbar) IsDismissed() (closed bool) {
 // https://material.io/components/lists.
 type List struct {
 	vecty.Core
+
 	// Optional field. If empty string is passed will not register javascript handler.
 	ID            string                        `vecty:"prop"`
 	List          vecty.List                    `vecty:"prop"`
 	ListElem      ListElem                      `vecty:"prop"`
 	ClickListener func(idx int, e *vecty.Event) `vecty:"prop"`
+	// Role is for use with Menus (dropdown)
+	Role string `vecty:"prop"`
 }
 
 func (l *List) id() string { return l.ID }
@@ -325,6 +329,9 @@ func (l *List) Render() vecty.ComponentOrHTML {
 			i := i // escape loop variable
 			switch e := v.(type) {
 			case *ListItem:
+				if l.Role == "menu" {
+					e.Role = "menuitem"
+				}
 				e.Listeners = append(e.Listeners, event.Click(func(e *vecty.Event) {
 					l.ClickListener(i, e)
 				}))
@@ -334,6 +341,7 @@ func (l *List) Render() vecty.ComponentOrHTML {
 
 	return element(vecty.Markup(
 		vecty.Class("mdc-list"),
+		vecty.MarkupIf(l.Role == "menu", vecty.Class(l.Role), vecty.Attribute("aria-orientation", "vertical"), vecty.Attribute("tabindex", "-1")),
 		vecty.MarkupIf(l.ID != "", prop.ID(l.ID)),
 	),
 		l.List,
@@ -375,6 +383,8 @@ type ListItem struct {
 	Active       bool                   `vecty:"prop"`
 	Listeners    []*vecty.EventListener `vecty:"prop"`
 	Ripple       bool                   `vecty:"prop"`
+	// Role is for use with menu (dropdown). Sets the Role property
+	Role string `vecty:"prop"`
 }
 
 func (l *ListItem) Render() vecty.ComponentOrHTML {
@@ -408,13 +418,14 @@ func (l *ListItem) Render() vecty.ComponentOrHTML {
 	)
 }
 
-var badFormID = "form inputs require unique, non empty IDs or names"
+var badFormID = "form inputs and javascript components require unique, non empty IDs or names"
 
 // Checkbox implements the checkbox Material Design component
 // https://material.io/components/checkboxes.
 // Checkboxes should always rendered as indeterminate on startup.
 type Checkbox struct {
 	vecty.Core
+
 	ID       string      `vecty:"prop"`
 	Label    *vecty.HTML `vecty:"prop"`
 	Disabled bool        `vecty:"prop"`
@@ -450,6 +461,7 @@ func (cb *Checkbox) Render() vecty.ComponentOrHTML {
 // https://material.io/components/data-tables
 type DataTable struct {
 	vecty.Core
+
 	Columns []Series `vecty:"prop"`
 	Rows    int      `vecty:"prop"`
 }
@@ -522,6 +534,7 @@ func (dt *DataTable) rows() vecty.MarkupOrChild {
 // The examples in the online documentation do not yield a working slider?
 type Slider struct {
 	vecty.Core
+
 	Name    string        `vecty:"prop"`
 	Min     int           `vecty:"prop"`
 	Max     int           `vecty:"prop"`
@@ -638,6 +651,7 @@ func (s *Slider) display() (disp vecty.MarkupOrChild) {
 // rather than nested underneath the anchor element or other elements.
 type Tooltip struct {
 	vecty.Core
+
 	ID    string      `vecty:"prop"`
 	Label *vecty.HTML `vecty:"prop"`
 }
@@ -687,6 +701,7 @@ func (tt *Tooltip) Unmount() {
 // (see Usage with top app bar)
 type SPA struct {
 	vecty.Core
+
 	Navbar           *Navbar             `vecty:"prop"`
 	Drawer           *Leftbar            `vecty:"prop"`
 	Content          vecty.MarkupOrChild `vecty:"prop"`
@@ -730,4 +745,48 @@ func (spa *SPA) Render() vecty.ComponentOrHTML {
 			),
 		),
 	)
+}
+
+type Dropdown struct {
+	vecty.Core
+
+	ID   string `vecty:"prop"`
+	List *List  `vecty:"prop"`
+}
+
+func (d *Dropdown) id() string { return d.ID }
+
+func (d *Dropdown) Render() vecty.ComponentOrHTML {
+	if d.ID == "" {
+		panic(badFormID)
+	}
+	d.List.Role = "menu"
+	return elem.Div(vecty.Markup(
+		vecty.Class("mdc-menu", "mdc-menu-surface"),
+		prop.ID(d.id()),
+	),
+		d.List,
+	)
+}
+
+func (d *Dropdown) Mount() {
+	handler := nsMenu.newFromId("MDCMenu", d.id())
+	globalHandlers.registerID(d.id(), handler)
+}
+
+func (d *Dropdown) SkipRender(c vecty.Component) bool {
+	skip := !Handler(d).IsUndefined()
+	return skip
+}
+
+func (d *Dropdown) Unmount() {
+	destroyHandler(d)
+}
+
+func (d *Dropdown) Dismiss(close bool) {
+	Handler(d).Set("open", !close)
+}
+
+func (d *Dropdown) IsDismissed() (closed bool) {
+	return !Handler(d).Get("open").Bool()
 }
