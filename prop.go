@@ -244,3 +244,21 @@ func (sv SliderVariant) ClassName() (class string) {
 	}
 	return class
 }
+
+type DialogVariant int
+
+const (
+	defaultDialogVariant DialogVariant = iota
+	// Full-screen dialogs group a series of tasks, such as creating a calendar entry with the event title, date, location, and time.
+	VariantFullScreen
+)
+
+func (sv DialogVariant) ClassName() (class string) {
+	switch sv {
+	case VariantFullScreen, defaultDialogVariant:
+		class = "mdc-dialog--fullscreen"
+	default:
+		panic("unknown DialogVariant")
+	}
+	return class
+}

@@ -87,6 +87,7 @@ const (
 	nsDrawer  namespace = "drawer"
 	nsList    namespace = "list"
 	nsMenu    namespace = "menu"
+	nsDialog  namespace = "dialog"
 )
 
 func (ns namespace) String() string {

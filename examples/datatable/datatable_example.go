@@ -5,6 +5,7 @@ import (
 	"github.com/hexops/vecty/elem"
 	"github.com/hexops/vecty/event"
 	"github.com/soypat/mdc"
+	"github.com/soypat/mdc/examples/jlog"
 )
 
 var (
@@ -30,6 +31,7 @@ func main() {
 	mdc.SetDefaultViewport()
 	mdc.AddDefaultStyles()
 	mdc.AddDefaultScripts()
+	jlog.PackageLevel = jlog.LevelTrace
 	body := &Body{}
 	globalListener = func() {
 		vecty.Rerender(body)
@@ -61,11 +63,12 @@ func (b *Body) Render() vecty.ComponentOrHTML {
 				},
 				vecty.If(b.hideSlider, vecty.Text("slider hidden")),
 				vecty.If(!b.hideSlider,
-					&mdc.Slider{
-						Name:    "slider-1",
-						Max:     100,
-						Variant: mdc.VariantSliderDiscrete,
-					},
+					elem.Div(
+						&mdc.Slider{
+							Name:    "slider-1",
+							Max:     100,
+							Variant: mdc.VariantSliderDiscrete,
+						}),
 				),
 			),
 		),

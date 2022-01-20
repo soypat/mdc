@@ -62,7 +62,7 @@ func (b *Body) Render() vecty.ComponentOrHTML {
 		List: &mdc.List{
 			// ID:            "list-1",
 			ClickListener: b.listenDehaze,
-			List:          items,
+			Items:         items,
 		},
 	}
 

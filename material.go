@@ -313,7 +313,7 @@ type List struct {
 
 	// Optional field. If empty string is passed will not register javascript handler.
 	ID            string                        `vecty:"prop"`
-	List          vecty.List                    `vecty:"prop"`
+	Items         vecty.List                    `vecty:"prop"`
 	ListElem      ListElem                      `vecty:"prop"`
 	ClickListener func(idx int, e *vecty.Event) `vecty:"prop"`
 	// Role is for use with Menus (dropdown)
@@ -325,7 +325,7 @@ func (l *List) id() string { return l.ID }
 func (l *List) Render() vecty.ComponentOrHTML {
 	element := l.ListElem.Element()
 	if l.ClickListener != nil {
-		for i, v := range l.List {
+		for i, v := range l.Items {
 			i := i // escape loop variable
 			switch e := v.(type) {
 			case *ListItem:
@@ -344,7 +344,7 @@ func (l *List) Render() vecty.ComponentOrHTML {
 		vecty.MarkupIf(l.Role == "menu", vecty.Class(l.Role), vecty.Attribute("aria-orientation", "vertical"), vecty.Attribute("tabindex", "-1")),
 		vecty.MarkupIf(l.ID != "", prop.ID(l.ID)),
 	),
-		l.List,
+		l.Items,
 	)
 }
 
@@ -747,11 +747,17 @@ func (spa *SPA) Render() vecty.ComponentOrHTML {
 	)
 }
 
+// Dropdown implements the Menu component from Material
+// Design's documentation https://material.io/components/menus
 type Dropdown struct {
 	vecty.Core
 
 	ID   string `vecty:"prop"`
 	List *List  `vecty:"prop"`
+	// Anchor will be rendered in the place of the dropdown
+	// and dropdown will display below it. If Anchor is not set
+	// then the dropdown will be anchored to its parent
+	Anchor *vecty.HTML `vecty:"prop"`
 }
 
 func (d *Dropdown) id() string { return d.ID }
@@ -762,10 +768,16 @@ func (d *Dropdown) Render() vecty.ComponentOrHTML {
 	}
 	d.List.Role = "menu"
 	return elem.Div(vecty.Markup(
-		vecty.Class("mdc-menu", "mdc-menu-surface"),
-		prop.ID(d.id()),
+		vecty.Markup(vecty.Class("mdc-menu-surface--anchor")),
+		vecty.MarkupIf(d.Anchor == nil, vecty.Class("toolbar")),
 	),
-		d.List,
+		vecty.If(d.Anchor != nil, d.Anchor),
+		elem.Div(vecty.Markup(
+			vecty.Class("mdc-menu", "mdc-menu-surface"),
+			prop.ID(d.id()),
+		),
+			d.List,
+		),
 	)
 }
 
@@ -789,4 +801,84 @@ func (d *Dropdown) Dismiss(close bool) {
 
 func (d *Dropdown) IsDismissed() (closed bool) {
 	return !Handler(d).Get("open").Bool()
+}
+
+// Dialog implements the dialog box
+// as described by Material Design components
+// https://material.io/components/dialogs/web.
+type Dialog struct {
+	vecty.Core
+
+	ID      string              `vecty:"prop"`
+	Title   *vecty.HTML         `vecty:"prop"`
+	Content vecty.MarkupOrChild `vecty:"prop"`
+	// Label on the OK button
+	OKLabel string        `vecty:"prop"`
+	Variant DialogVariant `vecty:"prop"`
+}
+
+func (d *Dialog) id() string { return d.ID }
+
+func (d *Dialog) Render() vecty.ComponentOrHTML {
+	if d.ID == "" {
+		panic(badFormID)
+	}
+	if d.OKLabel == "" {
+		d.OKLabel = "OK"
+	}
+	contentID := d.ID + "_content"
+	titleID := d.ID + "_title"
+
+	return elem.Div(
+		vecty.Markup(vecty.Class("mdc-dialog", d.Variant.ClassName()), prop.ID(d.id())),
+		elem.Div(vecty.Markup(vecty.Class("mdc-dialog__container")),
+			elem.Div(vecty.Markup(
+				vecty.Class("mdc-dialog__surface"),
+				vecty.Attribute("role", "dialog"),
+				vecty.Attribute("aria-labelledby", titleID),
+				vecty.Attribute("aria-describedby", contentID),
+			),
+				elem.Div(vecty.Markup(vecty.Class("mdc-dialog__header")),
+					elem.Heading2(vecty.Markup(vecty.Class("mdc-dialog__title"), prop.ID(titleID)),
+						d.Title,
+					),
+					// Close button
+					&Button{Icon: icons.Close, Applyer: vecty.Markup(vecty.Class("mdc-dialog__close"), vecty.Attribute("data-mdc-dialog-action", "close"))},
+				),
+				elem.Div(vecty.Markup(vecty.Class("mdc-dialog__content"), prop.ID(contentID)),
+					d.Content,
+				),
+				elem.Div(vecty.Markup(vecty.Class("mdc-dialog__actions")),
+					&Button{Label: vecty.Text(d.OKLabel), Applyer: vecty.Markup(vecty.Class("mdc-dialog__button"), vecty.Attribute("data-mdc-dialog-action", "ok"))},
+				),
+			),
+		),
+		elem.Div(vecty.Markup(vecty.Class("mdc-dialog__scrim"))),
+	)
+}
+
+func (d *Dialog) Mount() {
+	handler := nsDialog.newFromId("MDCDialog", d.id())
+	globalHandlers.registerID(d.id(), handler)
+}
+
+func (d *Dialog) SkipRender(c vecty.Component) bool {
+	skip := !Handler(d).IsUndefined()
+	return skip
+}
+
+func (d *Dialog) Unmount() {
+	destroyHandler(d)
+}
+
+func (d *Dialog) Open(open bool) {
+	if open {
+		Handler(d).Call("open")
+	} else {
+		Handler(d).Call("false")
+	}
+}
+
+func (d *Dialog) IsOpen() (open bool) {
+	return Handler(d).Get("isOpen").Bool()
 }
