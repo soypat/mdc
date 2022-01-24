@@ -269,43 +269,6 @@ func (lb *Leftbar) Render() vecty.ComponentOrHTML {
 	)
 }
 
-// func (lb *Leftbar) Mount() {
-// 	jlog.Trace("Leftbar.Mount")
-// 	if lb.Variant.IsDismissable() && !lb.NoJS {
-// 		handler := nsDrawer.newFromQuery("MDCDrawer", lb.id())
-// 		err := globalHandlers.registerID(lb.id(), handler)
-// 		jlog.Trace("Leftbar.Mount success", err)
-// 	}
-// }
-
-// func (lb *Leftbar) SkipRender(c vecty.Component) bool {
-// 	skip := !Handler(lb).IsUndefined()
-// 	jlog.Trace("Leftbar.SkipRender()=>", skip)
-// 	return skip
-// }
-
-// func (lb *Leftbar) Unmount() {
-// 	jlog.Trace("Leftbar.Unmount")
-// 	if lb.Variant.IsDismissable() && !lb.NoJS {
-// 		destroyHandler(lb)
-// 		jlog.Trace("Unmount.destroy success")
-// 	}
-// }
-
-// // Dismiss opens/closes a dismissable drawer (Dismissable and modal variants).
-// //
-// // Is a javascript binding.
-// func (lb *Leftbar) Dismiss(close bool) {
-// 	Handler(lb).Set("open", !close)
-// }
-
-// // Dismiss is dismissed returns true if drawer is closed (Dismissable and modal variants).
-// //
-// // Is a javascript binding.
-// func (lb *Leftbar) IsDismissed() (closed bool) {
-// 	return !Handler(lb).Get("open").Bool()
-// }
-
 // List implements the list Material Design component
 // https://material.io/components/lists.
 type List struct {
