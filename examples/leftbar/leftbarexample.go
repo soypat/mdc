@@ -37,7 +37,8 @@ func main() {
 
 type Body struct {
 	vecty.Core
-	selected int
+	selected  int
+	dismissed bool
 }
 
 func (b *Body) Render() vecty.ComponentOrHTML {
@@ -55,10 +56,10 @@ func (b *Body) Render() vecty.ComponentOrHTML {
 	selectedItem := items[b.selected].(*mdc.ListItem)
 	selectedItem.Active = true
 	lb := &mdc.Leftbar{
-		Variant:     mdc.VariantDismissableLeftbar,
-		StartClosed: false,
-		Title:       vecty.Text("Welcome user"),
-		Subtitle:    vecty.Text("NewAge Groceries welcomes you"),
+		Variant:   mdc.VariantDismissableLeftbar,
+		Dismissed: b.dismissed,
+		Title:     vecty.Text("Welcome user"),
+		Subtitle:  vecty.Text("NewAge Groceries welcomes you"),
 		List: &mdc.List{
 			// ID:            "list-1",
 			ClickListener: b.listenDehaze,
@@ -78,7 +79,8 @@ func (b *Body) Render() vecty.ComponentOrHTML {
 	but := &mdc.Button{
 		Icon: icons.Dehaze,
 		Listeners: []*vecty.EventListener{event.Click(func(e *vecty.Event) {
-			lb.Dismiss(!lb.IsDismissed())
+			b.dismissed = !b.dismissed
+			// lb.Dismiss(!lb.IsDismissed())
 			globalListener()
 		})},
 	}

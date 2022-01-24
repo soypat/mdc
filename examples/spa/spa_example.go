@@ -31,15 +31,18 @@ func main() {
 
 type Body struct {
 	vecty.Core
+
+	dismissed bool
 }
 
 func (b *Body) Render() vecty.ComponentOrHTML {
 	spa := &mdc.SPA{
 		FullHeightDrawer: false,
 		Drawer: &mdc.Leftbar{
-			Title:    vecty.Text(title),
-			Subtitle: vecty.Text(motto),
-			Variant:  mdc.VariantDismissableLeftbar,
+			Title:     vecty.Text(title),
+			Subtitle:  vecty.Text(motto),
+			Variant:   mdc.VariantDismissableLeftbar,
+			Dismissed: b.dismissed,
 			List: &mdc.List{
 				ID:       "list-111",
 				ListElem: mdc.ElementNavigationList,
@@ -58,7 +61,9 @@ func (b *Body) Render() vecty.ComponentOrHTML {
 	dehaze := &mdc.Button{
 		Icon: icons.Dehaze,
 		Listeners: []*vecty.EventListener{event.Click(func(e *vecty.Event) {
-			spa.Drawer.Dismiss(!spa.Drawer.IsDismissed())
+			b.dismissed = !b.dismissed
+			globalListener()
+			// spa.Drawer.Dismiss(!spa.Drawer.IsDismissed())
 		})},
 	}
 	spa.Navbar = &mdc.Navbar{

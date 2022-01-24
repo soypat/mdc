@@ -225,19 +225,19 @@ func newButtonIcon(kind icons.Icon) *icon {
 type Leftbar struct {
 	vecty.Core
 
-	Title       *vecty.HTML    `vecty:"prop"`
-	Subtitle    *vecty.HTML    `vecty:"prop"`
-	List        *List          `vecty:"prop"`
-	Variant     LeftbarVariant `vecty:"prop"`
-	StartClosed bool           `vecty:"prop"`
-	Applyer     vecty.Applyer  `vecty:"prop"`
-	NoJS        bool           `vecty:"prop"`
+	Title     *vecty.HTML    `vecty:"prop"`
+	Subtitle  *vecty.HTML    `vecty:"prop"`
+	List      *List          `vecty:"prop"`
+	Variant   LeftbarVariant `vecty:"prop"`
+	Dismissed bool           `vecty:"prop"`
+	Applyer   vecty.Applyer  `vecty:"prop"`
+	NoJS      bool           `vecty:"prop"`
 }
 
 func (lb *Leftbar) id() string { return ".mdc-drawer" }
 
 func (lb *Leftbar) Render() vecty.ComponentOrHTML {
-	jlog.Trace("Leftbar.Render")
+	jlog.Trace("Leftbar.Render dismissed:", lb.Dismissed)
 	dismissable := lb.Variant.IsDismissable()
 	if lb.List.ListElem == defaultList {
 		jlog.Trace("Leftbar Listelem autoset to nav")
@@ -249,7 +249,7 @@ func (lb *Leftbar) Render() vecty.ComponentOrHTML {
 			vecty.Class("mdc-drawer"),
 			vecty.MarkupIf(lb.Applyer != nil, lb.Applyer),
 			vecty.MarkupIf(dismissable, vecty.Class("mdc-drawer--dismissible")),
-			vecty.MarkupIf(!lb.StartClosed, vecty.Class("mdc-drawer--open")),
+			vecty.MarkupIf(!lb.Dismissed, vecty.Class("mdc-drawer--open")),
 		),
 		elem.Div(
 			vecty.Markup(vecty.Class("mdc-drawer__content")),
@@ -269,42 +269,42 @@ func (lb *Leftbar) Render() vecty.ComponentOrHTML {
 	)
 }
 
-func (lb *Leftbar) Mount() {
-	jlog.Trace("Leftbar.Mount")
-	if lb.Variant.IsDismissable() && !lb.NoJS {
-		handler := nsDrawer.newFromQuery("MDCDrawer", lb.id())
-		err := globalHandlers.registerID(lb.id(), handler)
-		jlog.Trace("Leftbar.Mount success", err)
-	}
-}
+// func (lb *Leftbar) Mount() {
+// 	jlog.Trace("Leftbar.Mount")
+// 	if lb.Variant.IsDismissable() && !lb.NoJS {
+// 		handler := nsDrawer.newFromQuery("MDCDrawer", lb.id())
+// 		err := globalHandlers.registerID(lb.id(), handler)
+// 		jlog.Trace("Leftbar.Mount success", err)
+// 	}
+// }
 
-func (lb *Leftbar) SkipRender(c vecty.Component) bool {
-	skip := !Handler(lb).IsUndefined()
-	jlog.Trace("Leftbar.SkipRender()=>", skip)
-	return skip
-}
+// func (lb *Leftbar) SkipRender(c vecty.Component) bool {
+// 	skip := !Handler(lb).IsUndefined()
+// 	jlog.Trace("Leftbar.SkipRender()=>", skip)
+// 	return skip
+// }
 
-func (lb *Leftbar) Unmount() {
-	jlog.Trace("Leftbar.Unmount")
-	if lb.Variant.IsDismissable() && !lb.NoJS {
-		destroyHandler(lb)
-		jlog.Trace("Unmount.destroy success")
-	}
-}
+// func (lb *Leftbar) Unmount() {
+// 	jlog.Trace("Leftbar.Unmount")
+// 	if lb.Variant.IsDismissable() && !lb.NoJS {
+// 		destroyHandler(lb)
+// 		jlog.Trace("Unmount.destroy success")
+// 	}
+// }
 
-// Dismiss opens/closes a dismissable drawer (Dismissable and modal variants).
-//
-// Is a javascript binding.
-func (lb *Leftbar) Dismiss(close bool) {
-	Handler(lb).Set("open", !close)
-}
+// // Dismiss opens/closes a dismissable drawer (Dismissable and modal variants).
+// //
+// // Is a javascript binding.
+// func (lb *Leftbar) Dismiss(close bool) {
+// 	Handler(lb).Set("open", !close)
+// }
 
-// Dismiss is dismissed returns true if drawer is closed (Dismissable and modal variants).
-//
-// Is a javascript binding.
-func (lb *Leftbar) IsDismissed() (closed bool) {
-	return !Handler(lb).Get("open").Bool()
-}
+// // Dismiss is dismissed returns true if drawer is closed (Dismissable and modal variants).
+// //
+// // Is a javascript binding.
+// func (lb *Leftbar) IsDismissed() (closed bool) {
+// 	return !Handler(lb).Get("open").Bool()
+// }
 
 // List implements the list Material Design component
 // https://material.io/components/lists.
@@ -319,8 +319,6 @@ type List struct {
 	// Role is for use with Menus (dropdown)
 	Role string `vecty:"prop"`
 }
-
-func (l *List) id() string { return l.ID }
 
 func (l *List) Render() vecty.ComponentOrHTML {
 	element := l.ListElem.Element()
@@ -346,30 +344,6 @@ func (l *List) Render() vecty.ComponentOrHTML {
 	),
 		l.Items,
 	)
-}
-
-func (l *List) Mount() {
-	jlog.Trace("List.Mount")
-	if l.ID != "" {
-		handler := nsList.newFromId("MDCList", l.id())
-		err := globalHandlers.registerID(l.id(), handler)
-		jlog.Trace("List.Mount err:", err)
-	}
-}
-
-func (l *List) SkipRender(c vecty.Component) (skip bool) {
-	if l.ID != "" {
-		skip = !Handler(l).IsUndefined()
-	}
-	jlog.Trace("List.SkipRender()=>", skip)
-	return skip
-}
-
-func (l *List) Unmount() {
-	jlog.Trace("List.Unmount")
-	if l.ID != "" {
-		destroyHandler(l)
-	}
 }
 
 // ListItem is a component for use with the List component.
@@ -656,8 +630,6 @@ type Tooltip struct {
 	Label *vecty.HTML `vecty:"prop"`
 }
 
-func (tt *Tooltip) id() string { return tt.ID }
-
 func (tt *Tooltip) Apply(h *vecty.HTML) {
 	vecty.Markup(
 		vecty.Attribute("aria-describedby", tt.ID),
@@ -678,21 +650,6 @@ func (tt *Tooltip) Render() vecty.ComponentOrHTML {
 			tt.Label,
 		),
 	)
-}
-
-// Mount TODO(soypat): is tricky business. Javascript must be called on the HTML node in the DOM
-// after it is rendered. Luckily tooltip should be static if not removed from the dom.
-// This probably breaks if tooltip is removed by vecty. Must find JS methods for "destroying"
-// the javascript handle to the tooltip for use with the vecty.Unmount interface.
-//
-// DO NOT CALL MOUNT METHOD YOURSELF. This method is called by vecty only.
-func (tt *Tooltip) Mount() {
-	handler := nsTooltip.newFromId("MDCTooltip", tt.ID)
-	globalHandlers.registerID(tt.id(), handler)
-}
-
-func (tt *Tooltip) Unmount() {
-	destroyHandler(tt)
 }
 
 // SPA implements the suggested combination of Appbar with
@@ -760,8 +717,6 @@ type Dropdown struct {
 	Anchor *vecty.HTML `vecty:"prop"`
 }
 
-func (d *Dropdown) id() string { return d.ID }
-
 func (d *Dropdown) Render() vecty.ComponentOrHTML {
 	if d.ID == "" {
 		panic(badFormID)
@@ -774,33 +729,11 @@ func (d *Dropdown) Render() vecty.ComponentOrHTML {
 		vecty.If(d.Anchor != nil, d.Anchor),
 		elem.Div(vecty.Markup(
 			vecty.Class("mdc-menu", "mdc-menu-surface"),
-			prop.ID(d.id()),
+			prop.ID(d.ID),
 		),
 			d.List,
 		),
 	)
-}
-
-func (d *Dropdown) Mount() {
-	handler := nsMenu.newFromId("MDCMenu", d.id())
-	globalHandlers.registerID(d.id(), handler)
-}
-
-func (d *Dropdown) SkipRender(c vecty.Component) bool {
-	skip := !Handler(d).IsUndefined()
-	return skip
-}
-
-func (d *Dropdown) Unmount() {
-	destroyHandler(d)
-}
-
-func (d *Dropdown) Dismiss(close bool) {
-	Handler(d).Set("open", !close)
-}
-
-func (d *Dropdown) IsDismissed() (closed bool) {
-	return !Handler(d).Get("open").Bool()
 }
 
 // Dialog implements the dialog box
@@ -817,8 +750,6 @@ type Dialog struct {
 	Variant DialogVariant `vecty:"prop"`
 }
 
-func (d *Dialog) id() string { return d.ID }
-
 func (d *Dialog) Render() vecty.ComponentOrHTML {
 	if d.ID == "" {
 		panic(badFormID)
@@ -830,7 +761,7 @@ func (d *Dialog) Render() vecty.ComponentOrHTML {
 	titleID := d.ID + "_title"
 
 	return elem.Div(
-		vecty.Markup(vecty.Class("mdc-dialog", d.Variant.ClassName()), prop.ID(d.id())),
+		vecty.Markup(vecty.Class("mdc-dialog", d.Variant.ClassName()), prop.ID(d.ID)),
 		elem.Div(vecty.Markup(vecty.Class("mdc-dialog__container")),
 			elem.Div(vecty.Markup(
 				vecty.Class("mdc-dialog__surface"),
@@ -855,30 +786,4 @@ func (d *Dialog) Render() vecty.ComponentOrHTML {
 		),
 		elem.Div(vecty.Markup(vecty.Class("mdc-dialog__scrim"))),
 	)
-}
-
-func (d *Dialog) Mount() {
-	handler := nsDialog.newFromId("MDCDialog", d.id())
-	globalHandlers.registerID(d.id(), handler)
-}
-
-func (d *Dialog) SkipRender(c vecty.Component) bool {
-	skip := !Handler(d).IsUndefined()
-	return skip
-}
-
-func (d *Dialog) Unmount() {
-	destroyHandler(d)
-}
-
-func (d *Dialog) Open(open bool) {
-	if open {
-		Handler(d).Call("open")
-	} else {
-		Handler(d).Call("false")
-	}
-}
-
-func (d *Dialog) IsOpen() (open bool) {
-	return Handler(d).Get("isOpen").Bool()
 }
