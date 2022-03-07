@@ -7,7 +7,6 @@ import (
 	"github.com/hexops/vecty/elem"
 	"github.com/hexops/vecty/event"
 	"github.com/hexops/vecty/prop"
-	"github.com/soypat/mdc/examples/jlog"
 	"github.com/soypat/mdc/icons"
 )
 
@@ -31,7 +30,7 @@ type Button struct {
 }
 
 func (b *Button) Render() vecty.ComponentOrHTML {
-	jlog.Trace("Button.Render")
+
 	hasIcon := b.Icon.IsValid()
 	markups := []vecty.Applyer{
 		prop.Disabled(b.Disabled),
@@ -83,7 +82,6 @@ type Typography struct {
 }
 
 func (t *Typography) Render() vecty.ComponentOrHTML {
-	jlog.Trace("Typography.Render")
 	if t.Root == nil {
 		panic("Root not set. did you forget to set it?")
 	}
@@ -109,7 +107,6 @@ type Navbar struct {
 }
 
 func (tb *Navbar) Render() vecty.ComponentOrHTML {
-	jlog.Trace("TopBar.Render")
 	for _, e := range tb.SectionStart {
 		tb.apply(e)
 	}
@@ -199,7 +196,6 @@ type icon struct {
 }
 
 func (c *icon) Render() vecty.ComponentOrHTML {
-	jlog.Trace("icon.Render")
 	classes := vecty.ClassMap{
 		"material-icons":              true,
 		"mdc-" + c.Subtype + "__icon": c.Subtype != "",
@@ -237,10 +233,8 @@ type Leftbar struct {
 func (lb *Leftbar) id() string { return ".mdc-drawer" }
 
 func (lb *Leftbar) Render() vecty.ComponentOrHTML {
-	jlog.Trace("Leftbar.Render dismissed:", lb.Dismissed)
 	dismissable := lb.Variant.IsDismissable()
 	if lb.List.ListElem == defaultList {
-		jlog.Trace("Leftbar Listelem autoset to nav")
 		lb.List.ListElem = ElementNavigationList
 	}
 	hasHeader := lb.Title != nil || lb.Subtitle != nil
@@ -483,27 +477,23 @@ type Slider struct {
 func (s *Slider) id() string { return s.Name }
 
 func (s *Slider) Mount() {
-	jlog.Trace("Slider.Mount")
 	handle := nsSlider.newFromId("MDCSlider", s.Name)
 	err := globalHandlers.registerID(s.id(), handle)
 	if err != nil {
-		jlog.Debug("Slider.Mount register error", err)
+		panic(err)
 	}
 }
 
 func (s *Slider) SkipRender(prev vecty.Component) bool {
 	skip := !Handler(s).IsUndefined()
-	jlog.Trace("Slider.SkipRender() =>", skip)
 	return skip
 }
 
 func (s *Slider) Unmount() {
-	jlog.Trace("Slider.Unmount")
 	destroyHandler(s)
 }
 
 func (s *Slider) Render() vecty.ComponentOrHTML {
-	jlog.Trace("slider.Render")
 	if s.Name == "" {
 		panic(badFormID)
 	}

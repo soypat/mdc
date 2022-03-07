@@ -1,10 +1,12 @@
 package mdc
 
 import (
+	"io"
 	"syscall/js"
 	"time"
 
 	"github.com/hexops/vecty"
+	"github.com/soypat/gwasm"
 )
 
 /* MDC boot */
@@ -33,8 +35,8 @@ func SetDefaultViewport() {
 	js.Global().Get("document").Get("head").Call("appendChild", meta)
 }
 
-func AddDefaultScripts() {
-	addScript(baseScriptURL, "mdc")
+func AddDefaultScripts(timeout time.Duration) {
+	gwasm.AddScript(baseScriptURL, "mdc", timeout)
 }
 
 func mdcOK() bool {
@@ -42,20 +44,23 @@ func mdcOK() bool {
 	return !mdc.IsNull() && !mdc.IsUndefined()
 }
 
-func addScript(url string, objName string) {
-	script := js.Global().Get("document").Call("createElement", "script")
-	script.Set("src", url)
-	js.Global().Get("document").Get("head").Call("appendChild", script)
-	count := 0
-	for {
-		count++
-		time.Sleep(25 * time.Millisecond)
-		if jsObject := js.Global().Get(objName); !jsObject.IsUndefined() {
-			break
-		} else if count > 100 {
-			panic("could not obtain " + objName + " from URL: " + url)
-		}
+// Console returns the browser console as an io.Writer which one
+// can use to set log output.
+func Console() io.Writer {
+	return jsWriter{
+		Value: js.Global().Get("console"),
+		fname: "log",
 	}
+}
+
+type jsWriter struct {
+	js.Value
+	fname string
+}
+
+func (j jsWriter) Write(b []byte) (int, error) {
+	j.Call(j.fname, string(b))
+	return len(b), nil
 }
 
 const svgCheckbox = `<svg class="mdc-checkbox__checkmark"

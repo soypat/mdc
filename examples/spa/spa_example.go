@@ -1,11 +1,12 @@
 package main
 
 import (
+	"time"
+
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"
 	"github.com/hexops/vecty/event"
 	"github.com/soypat/mdc"
-	"github.com/soypat/mdc/examples/jlog"
 	"github.com/soypat/mdc/icons"
 )
 
@@ -17,10 +18,9 @@ const (
 var globalListener func()
 
 func main() {
-	jlog.PackageLevel = jlog.LevelTrace
 	mdc.SetDefaultViewport()
 	mdc.AddDefaultStyles()
-	mdc.AddDefaultScripts()
+	mdc.AddDefaultScripts(500 * time.Millisecond)
 
 	body := &Body{}
 	globalListener = func() {

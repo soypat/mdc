@@ -1,11 +1,12 @@
 package main
 
 import (
+	"time"
+
 	"github.com/hexops/vecty"
 	"github.com/hexops/vecty/elem"
 	"github.com/hexops/vecty/event"
 	"github.com/soypat/mdc"
-	"github.com/soypat/mdc/examples/jlog"
 )
 
 var globalListener func()
@@ -13,7 +14,7 @@ var globalListener func()
 func main() {
 	mdc.SetDefaultViewport()
 	mdc.AddDefaultStyles()
-	mdc.AddDefaultScripts()
+	mdc.AddDefaultScripts(500 * time.Millisecond)
 
 	body := &Body{}
 	globalListener = func() {
@@ -40,14 +41,18 @@ func (b *Body) Render() vecty.ComponentOrHTML {
 		),
 		Disabled: b.disableButton,
 	}
-	jlog.Debug("button disabled:", butt.Disabled)
 	return elem.Body(
 		tooltip,
 		elem.Main(
 			elem.Div(
 				butt.SetEventListeners(event.Click(func(e *vecty.Event) {
-					jlog.Debug("got a button click!")
 					b.disableButton = true
+					go func() {
+						// After one second reenable button.
+						time.Sleep(time.Second)
+						b.disableButton = false
+						globalListener()
+					}()
 					// Best practices in Vecty are to do top-down renders.
 					// See `todomvc` example over at https://github.com/hexops/vecty/tree/main/example
 					globalListener()
